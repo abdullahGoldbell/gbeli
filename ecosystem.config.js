@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'fms-dashboard',
-      script: 'node_modules/.bin/next',
+      script: 'node_modules/next/dist/bin/next',
       args: 'start -H 0.0.0.0 -p 3005',
       env: {
         NODE_ENV: 'production',
