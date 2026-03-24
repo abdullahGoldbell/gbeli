@@ -8,6 +8,8 @@ import Filters from './Filters';
 import FleetTable from './FleetTable';
 import Notifications, { showToast } from './Notifications';
 import AddVehicleModal from './AddVehicleModal';
+import { useAuth } from './AuthProvider';
+import AdminPanel from './AdminPanel';
 
 interface FilterState {
   fleet_type: string;
@@ -27,6 +29,8 @@ export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [updatedRowIds, setUpdatedRowIds] = useState<Set<number>>(new Set());
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const { user, logout } = useAuth();
+  const [showAdmin, setShowAdmin] = useState(false);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -188,9 +192,31 @@ export default function Dashboard() {
             <h1 className="text-xl font-bold tracking-tight">FMS Fleet Dashboard</h1>
             <p className="text-neutral-400 text-sm">Fleet Management System &middot; {data.length} vehicles</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-xs text-neutral-400">Live</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs text-neutral-400">Live</span>
+            </div>
+            {user && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-neutral-300">{user.displayName || user.username}</span>
+                {user.isAdmin && (
+                  <button
+                    onClick={() => setShowAdmin(true)}
+                    className="text-neutral-400 hover:text-white transition-colors text-lg"
+                    title="Admin Panel"
+                  >
+                    ⚙
+                  </button>
+                )}
+                <button
+                  onClick={logout}
+                  className="text-xs text-neutral-400 hover:text-white border border-neutral-600 hover:border-neutral-400 px-2.5 py-1 rounded transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -212,11 +238,12 @@ export default function Dashboard() {
             Loading fleet data...
           </div>
         ) : (
-          <FleetTable data={data} onUpdate={handleUpdate} onDelete={handleDelete} updatedRowIds={updatedRowIds} />
+          <FleetTable data={data} onUpdate={handleUpdate} onDelete={handleDelete} updatedRowIds={updatedRowIds} hiddenColumns={user?.hiddenColumns || []} />
         )}
       </main>
 
       {showAddModal && <AddVehicleModal onClose={() => setShowAddModal(false)} onSubmit={handleAdd} />}
+      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
     </div>
   );
 }

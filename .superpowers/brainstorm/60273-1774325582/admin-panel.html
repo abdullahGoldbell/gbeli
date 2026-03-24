@@ -1,0 +1,115 @@
+<h2>Admin Panel Design</h2>
+<p class="subtitle">How should the admin panel appear from the dashboard header? Click to select.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: #0f172a; border-radius: 8px; overflow: hidden; min-height: 360px;">
+        <!-- Header bar -->
+        <div style="background: #1e293b; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
+          <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">FMS Fleet Dashboard</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: #94a3b8; font-size: 13px;">admin</span>
+            <div style="width: 32px; height: 32px; background: #334155; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #3b82f6;">
+              <span style="color: #f8fafc; font-size: 14px;">⚙</span>
+            </div>
+          </div>
+        </div>
+        <!-- Slide-over panel from right -->
+        <div style="display: flex; height: 300px;">
+          <!-- Dimmed dashboard behind -->
+          <div style="flex: 1; background: rgba(15,23,42,0.7); padding: 16px; opacity: 0.3;">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <div style="background: #1e293b; border-radius: 6px; padding: 12px; flex: 1; height: 50px;"></div>
+              <div style="background: #1e293b; border-radius: 6px; padding: 12px; flex: 1; height: 50px;"></div>
+              <div style="background: #1e293b; border-radius: 6px; padding: 12px; flex: 1; height: 50px;"></div>
+            </div>
+            <div style="background: #1e293b; border-radius: 6px; height: 200px;"></div>
+          </div>
+          <!-- Slide-over -->
+          <div style="width: 320px; background: #1e293b; border-left: 1px solid #334155; padding: 20px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">Admin Panel</div>
+              <div style="color: #64748b; cursor: pointer;">✕</div>
+            </div>
+            <!-- User list -->
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Users</div>
+            <div style="background: #0f172a; border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <div><span style="color: #f8fafc; font-size: 13px; font-weight: 500;">admin</span> <span style="background: #3b82f6; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">ADMIN</span></div>
+              <span style="color: #64748b; font-size: 12px;">⚙</span>
+            </div>
+            <div style="background: #0f172a; border-radius: 6px; padding: 10px 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+              <div><span style="color: #f8fafc; font-size: 13px; font-weight: 500;">john.doe</span></div>
+              <span style="color: #64748b; font-size: 12px;">⚙</span>
+            </div>
+            <div style="background: #0f172a; border-radius: 6px; padding: 10px 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+              <div><span style="color: #f8fafc; font-size: 13px; font-weight: 500;">sarah.lee</span></div>
+              <span style="color: #64748b; font-size: 12px;">⚙</span>
+            </div>
+            <div style="background: #3b82f6; color: white; text-align: center; padding: 8px; border-radius: 6px; font-size: 13px; font-weight: 600;">+ Add User</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A: Slide-over Drawer</h3>
+      <p>Panel slides in from the right. Dashboard stays visible but dimmed. Quick access without leaving the page.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: #0f172a; border-radius: 8px; overflow: hidden; min-height: 360px;">
+        <!-- Header bar -->
+        <div style="background: #1e293b; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
+          <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">FMS Fleet Dashboard</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: #94a3b8; font-size: 13px;">admin</span>
+            <div style="width: 32px; height: 32px; background: #334155; border-radius: 6px; display: flex; align-items: center; justify-content: center; border: 2px solid #3b82f6;">
+              <span style="color: #f8fafc; font-size: 14px;">⚙</span>
+            </div>
+          </div>
+        </div>
+        <!-- Modal overlay -->
+        <div style="height: 300px; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;">
+          <div style="background: #1e293b; border: 1px solid #334155; border-radius: 12px; width: 520px; padding: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">Admin Panel</div>
+              <div style="color: #64748b;">✕</div>
+            </div>
+            <!-- Tabs -->
+            <div style="display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid #334155;">
+              <div style="padding: 8px 16px; font-size: 13px; color: #3b82f6; border-bottom: 2px solid #3b82f6; font-weight: 600;">Users</div>
+              <div style="padding: 8px 16px; font-size: 13px; color: #64748b;">Column Access</div>
+            </div>
+            <!-- User rows -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: #f8fafc; font-size: 13px;">admin</span>
+                <span style="background: #3b82f6; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px;">ADMIN</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <span style="color: #64748b; font-size: 12px;">Edit</span>
+                <span style="color: #ef4444; font-size: 12px;">Delete</span>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b;">
+              <span style="color: #f8fafc; font-size: 13px;">john.doe</span>
+              <div style="display: flex; gap: 8px;">
+                <span style="color: #64748b; font-size: 12px;">Edit</span>
+                <span style="color: #ef4444; font-size: 12px;">Delete</span>
+              </div>
+            </div>
+            <div style="margin-top: 12px; text-align: right;">
+              <span style="background: #3b82f6; color: white; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;">+ Add User</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B: Center Modal with Tabs</h3>
+      <p>Modal dialog with tabs for Users and Column Access. More room for content, feels like a settings panel.</p>
+    </div>
+  </div>
+</div>

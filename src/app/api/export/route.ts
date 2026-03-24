@@ -19,17 +19,39 @@ export async function GET(req: NextRequest) {
     const result = await request.query(query);
     const data = result.recordset;
 
+    // Get user's hidden columns
+    const userId = req.headers.get('x-user-id');
+    let hiddenColumns: string[] = [];
+    if (userId) {
+      const colsResult = await pool.request()
+        .input('userId', sql.Int, parseInt(userId))
+        .query('SELECT column_key FROM user_hidden_columns WHERE user_id = @userId');
+      hiddenColumns = colsResult.recordset.map((r: { column_key: string }) => r.column_key);
+    }
+
+    // Filter out hidden columns from data
+    const filterColumns = (records: Record<string, unknown>[]) => {
+      if (hiddenColumns.length === 0) return records;
+      return records.map((r) => {
+        const filtered: Record<string, unknown> = {};
+        for (const [key, val] of Object.entries(r)) {
+          if (!hiddenColumns.includes(key)) filtered[key] = val;
+        }
+        return filtered;
+      });
+    };
+
     const wb = XLSX.utils.book_new();
 
     const electrical = data.filter((r: Record<string, unknown>) => r.fleet_type === 'ELECTRICAL');
     const diesel = data.filter((r: Record<string, unknown>) => r.fleet_type === 'DIESEL');
 
     if (!fleetType || fleetType === 'ELECTRICAL') {
-      const ws = XLSX.utils.json_to_sheet(electrical);
+      const ws = XLSX.utils.json_to_sheet(filterColumns(electrical));
       XLSX.utils.book_append_sheet(wb, ws, 'ELECTRICAL');
     }
     if (!fleetType || fleetType === 'DIESEL') {
-      const ws = XLSX.utils.json_to_sheet(diesel);
+      const ws = XLSX.utils.json_to_sheet(filterColumns(diesel));
       XLSX.utils.book_append_sheet(wb, ws, 'Diesel');
     }
 

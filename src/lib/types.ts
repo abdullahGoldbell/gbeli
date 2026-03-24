@@ -44,3 +44,21 @@ export interface FleetStats {
   scrapped: number;
   conditions: { condition: string; count: number }[];
 }
+
+export interface User {
+  id: number;
+  username: string;
+  password_hash: string;
+  display_name: string | null;
+  is_admin: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuthUser {
+  userId: number;
+  username: string;
+  displayName: string | null;
+  isAdmin: boolean;
+  hiddenColumns: string[];
+}

@@ -1,0 +1,121 @@
+<h2>Column Access Configuration</h2>
+<p class="subtitle">When the admin edits a user's column visibility, how should it look? Click to select.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: rgba(0,0,0,0.6); border-radius: 8px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 380px;">
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 12px; width: 480px; padding: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">Edit User: john.doe</div>
+            <div style="color: #64748b;">✕</div>
+          </div>
+          <div style="font-size: 12px; color: #64748b; margin-bottom: 16px;">Toggle columns this user can see</div>
+
+          <!-- Column grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 260px; overflow-y: auto; padding-right: 4px;">
+            <!-- ON items -->
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 18px; background: #3b82f6; border-radius: 9px; position: relative;"><div style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div></div>
+              <span style="color: #f8fafc; font-size: 12px;">Type</span>
+            </div>
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 18px; background: #3b82f6; border-radius: 9px; position: relative;"><div style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div></div>
+              <span style="color: #f8fafc; font-size: 12px;">Veh No</span>
+            </div>
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 18px; background: #3b82f6; border-radius: 9px; position: relative;"><div style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div></div>
+              <span style="color: #f8fafc; font-size: 12px;">Brand</span>
+            </div>
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 18px; background: #3b82f6; border-radius: 9px; position: relative;"><div style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div></div>
+              <span style="color: #f8fafc; font-size: 12px;">Model</span>
+            </div>
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 18px; background: #3b82f6; border-radius: 9px; position: relative;"><div style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div></div>
+              <span style="color: #f8fafc; font-size: 12px;">Customer</span>
+            </div>
+            <!-- OFF items -->
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 18px; background: #475569; border-radius: 9px; position: relative;"><div style="width: 14px; height: 14px; background: #94a3b8; border-radius: 50%; position: absolute; left: 2px; top: 2px;"></div></div>
+              <span style="color: #64748b; font-size: 12px; text-decoration: line-through;">Rental</span>
+            </div>
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 18px; background: #475569; border-radius: 9px; position: relative;"><div style="width: 14px; height: 14px; background: #94a3b8; border-radius: 50%; position: absolute; left: 2px; top: 2px;"></div></div>
+              <span style="color: #64748b; font-size: 12px; text-decoration: line-through;">Sales</span>
+            </div>
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 18px; background: #475569; border-radius: 9px; position: relative;"><div style="width: 14px; height: 14px; background: #94a3b8; border-radius: 50%; position: absolute; left: 2px; top: 2px;"></div></div>
+              <span style="color: #64748b; font-size: 12px; text-decoration: line-through;">Scrap</span>
+            </div>
+            <div style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 18px; background: #3b82f6; border-radius: 9px; position: relative;"><div style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; right: 2px; top: 2px;"></div></div>
+              <span style="color: #f8fafc; font-size: 12px;">Remarks</span>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+            <div style="padding: 8px 16px; border: 1px solid #334155; border-radius: 6px; color: #94a3b8; font-size: 13px;">Cancel</div>
+            <div style="background: #3b82f6; color: white; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;">Save</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A: Toggle Grid</h3>
+      <p>Two-column grid of toggle switches. All columns listed, toggle on/off. Hidden columns shown with strikethrough. Compact and scannable.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: rgba(0,0,0,0.6); border-radius: 8px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 380px;">
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 12px; width: 480px; padding: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <div style="font-size: 16px; font-weight: 700; color: #f8fafc;">Edit User: john.doe</div>
+            <div style="color: #64748b;">✕</div>
+          </div>
+          <div style="font-size: 12px; color: #64748b; margin-bottom: 16px;">Check/uncheck columns this user can see</div>
+
+          <!-- Checkbox list -->
+          <div style="max-height: 260px; overflow-y: auto;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Vehicle Info</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 14px; padding-left: 4px;">
+              <label style="display: flex; align-items: center; gap: 6px; color: #f8fafc; font-size: 13px; width: 45%;"><span style="color: #3b82f6;">☑</span> Type</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #f8fafc; font-size: 13px; width: 45%;"><span style="color: #3b82f6;">☑</span> Veh No</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #f8fafc; font-size: 13px; width: 45%;"><span style="color: #3b82f6;">☑</span> Brand</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #f8fafc; font-size: 13px; width: 45%;"><span style="color: #3b82f6;">☑</span> Model</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #f8fafc; font-size: 13px; width: 45%;"><span style="color: #3b82f6;">☑</span> Category</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #f8fafc; font-size: 13px; width: 45%;"><span style="color: #3b82f6;">☑</span> Chassis</label>
+            </div>
+
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Status & Sales</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 14px; padding-left: 4px;">
+              <label style="display: flex; align-items: center; gap: 6px; color: #f8fafc; font-size: 13px; width: 45%;"><span style="color: #3b82f6;">☑</span> Condition</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #f8fafc; font-size: 13px; width: 45%;"><span style="color: #3b82f6;">☑</span> Customer</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #64748b;">☐</span> Rental</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #64748b;">☐</span> Sales</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #64748b;">☐</span> Scrap</label>
+              <label style="display: flex; align-items: center; gap: 6px; color: #f8fafc; font-size: 13px; width: 45%;"><span style="color: #3b82f6;">☑</span> Remarks</label>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <div style="display: flex; gap: 12px;">
+              <span style="color: #3b82f6; font-size: 12px; cursor: pointer;">Select All</span>
+              <span style="color: #64748b; font-size: 12px; cursor: pointer;">Deselect All</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <div style="padding: 8px 16px; border: 1px solid #334155; border-radius: 6px; color: #94a3b8; font-size: 13px;">Cancel</div>
+              <div style="background: #3b82f6; color: white; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;">Save</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B: Grouped Checkboxes</h3>
+      <p>Columns organized by category (Vehicle Info, Status & Sales, etc.) with checkboxes. Select All / Deselect All shortcuts. More structured.</p>
+    </div>
+  </div>
+</div>
