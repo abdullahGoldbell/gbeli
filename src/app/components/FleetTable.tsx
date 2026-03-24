@@ -19,11 +19,12 @@ interface Props {
   onUpdate: (id: number, field: string, value: string | number | boolean | null) => void;
   onDelete: (id: number, vehNo: string) => void;
   updatedRowIds: Set<number>;
+  hiddenColumns: string[];
 }
 
 const CONDITIONS = ['OK', 'REPAIRING', 'REPAIRED', 'SOLD', 'SCRAPPED', 'INTER', 'PENDING'];
 
-export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds }: Props) {
+export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hiddenColumns }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
 
@@ -208,9 +209,17 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds }: 
     }),
   ], [columnHelper, onUpdate, onDelete]);
 
+  const visibleColumns = useMemo(() => {
+    return columns.filter((col) => {
+      // Display columns (like 'actions') have no accessorKey — always show them
+      if (!('accessorKey' in col)) return true;
+      return !hiddenColumns.includes(col.accessorKey as string);
+    });
+  }, [columns, hiddenColumns]);
+
   const table = useReactTable({
     data,
-    columns,
+    columns: visibleColumns,
     state: { sorting },
     onSortingChange: setSorting,
     columnResizeMode,
