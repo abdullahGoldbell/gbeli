@@ -2,7 +2,7 @@
 
 ## Overview
 
-Add authentication and column-level access control to the FMS Fleet Dashboard. Admins can create users and configure which columns each user can see. All other dashboard features (edit, add, delete, export) remain available to all logged-in users.
+Add authentication and column-level visibility control to the FMS Fleet Dashboard. Admins can create users and configure which columns each user can see in the UI. This is a **UI visibility preference** — not a security boundary. All logged-in users have full API access to all data. The goal is to declutter the table for different roles, not to enforce data-level restrictions. All other dashboard features (edit, add, delete, export) remain available to all logged-in users.
 
 ## Authentication
 
@@ -26,8 +26,9 @@ Add authentication and column-level access control to the FMS Fleet Dashboard. A
 - First admin account created on app startup from environment variables:
   - `ADMIN_USERNAME` (default: `admin`)
   - `ADMIN_PASSWORD` (required, no default)
-- Startup logic in a utility function called from the root layout's server component
-- If the user already exists, skip creation (idempotent)
+- Startup logic uses a **module-level singleton pattern**: a `Promise` stored in a module-global variable that runs once per process, not on every request
+- Uses `IF NOT EXISTS (SELECT 1 FROM users WHERE username = @username)` guard — idempotent and safe under concurrent requests
+- Called from the root layout's server component but executes only once due to the singleton guard
 
 ## Database Schema
 
@@ -55,7 +56,14 @@ Two new tables in the existing FMS MSSQL database.
 
 - Unique constraint on `(user_id, column_key)`
 - All columns visible by default. Rows only exist for columns that are hidden.
-- `column_key` values correspond to the column accessor keys in FleetTable (e.g., `fleet_type`, `veh_no`, `brand`, `model`, `category`, `condition`, `customer_name`, `salesman_name`, `chassis`, `mast`, `yor`, `yom`, `rental`, `sales`, `scrap`, `remarks`, `location`, `replace_ref`, `container_mast`, `repair_cost`)
+- **Canonical `column_key` values** (matches FleetTable column accessors):
+  - Vehicle Info: `fleet_type`, `veh_no`, `brand`, `model`, `model2`, `category`, `chassis`, `mast`, `container_mast`, `attachment`, `yor`, `yom`
+  - Status & Assignment: `condition`, `customer_name`, `salesman_name`, `location`, `postal_code`
+  - Financial: `rental`, `sales`, `scrap`, `repair_cost`
+  - Technical: `battery`, `lta_reg`, `volts`, `equipment_type`, `serviceable`
+  - Other: `remarks`, `customer_requirements`, `replace_ref`, `in_out_date`
+- The `actions` column (delete button) and `id` column are **never hideable** — they are system/UI columns
+- Column hiding applies to the FleetTable UI and Excel export. Hidden columns are excluded from export output for the requesting user.
 
 ## Route Protection
 
@@ -76,6 +84,7 @@ Two new tables in the existing FMS MSSQL database.
 - Validates credentials against `users` table using `bcryptjs.compare()`
 - On success: signs JWT with `{ userId, username, isAdmin }`, sets httpOnly cookie, returns `{ success: true, user: { username, displayName, isAdmin } }`
 - On failure: returns 401 `{ error: "Invalid credentials" }`
+- **Brute-force protection**: track failed login attempts per username in memory (simple Map). After 5 consecutive failures, lock the account for 15 minutes. Return 429 `{ error: "Too many attempts. Try again later." }`. Reset counter on successful login.
 
 **`POST /api/auth/logout`** (protected)
 - Clears the `fms_token` cookie
@@ -89,6 +98,7 @@ Two new tables in the existing FMS MSSQL database.
 ### Admin Routes
 
 **`GET /api/admin/users`** (admin only)
+- Verifies `isAdmin` from the database, not just the JWT claim
 - Returns array of all users: `{ id, username, displayName, isAdmin, createdAt, hiddenColumns: string[] }`
 - Does not return password hashes
 
@@ -101,7 +111,9 @@ Two new tables in the existing FMS MSSQL database.
 **`PUT /api/admin/users/[id]`** (admin only)
 - Body: `{ username?: string, password?: string, displayName?: string, isAdmin?: boolean, hiddenColumns?: string[] }`
 - If password provided, re-hash it
-- If hiddenColumns provided, delete all existing rows for this user and re-insert
+- If hiddenColumns provided, delete all existing rows for this user and re-insert **within a transaction**
+- Explicitly sets `updated_at = GETDATE()` in the UPDATE query (MSSQL DEFAULT only applies on INSERT)
+- Verifies `isAdmin` from the database, not just the JWT claim
 - Returns updated user
 
 **`DELETE /api/admin/users/[id]`** (admin only)
@@ -143,7 +155,7 @@ Two new tables in the existing FMS MSSQL database.
 - `Dashboard.tsx` fetches the current user's `hiddenColumns` from `GET /api/auth/me` on mount
 - Passes `hiddenColumns` to `FleetTable` as a prop
 - `FleetTable` filters its column definitions to exclude any column whose key is in `hiddenColumns`
-- This is client-side filtering only — the API returns all columns regardless
+- This is UI-level filtering — the fleet API returns all columns regardless (this is a visibility preference, not a security boundary)
 
 ### Auth Context
 
@@ -153,6 +165,20 @@ Two new tables in the existing FMS MSSQL database.
   - `refreshUser: () => void`
 - Wrap the dashboard in this context provider
 - Used by: header (username, admin check, logout), FleetTable (hidden columns), AdminPanel (admin check)
+
+## Socket.io Authentication
+
+- The standalone Socket.io server (`server.js`, port 3001) must require authentication
+- Clients pass the JWT token in the `auth` handshake parameter: `io({ auth: { token } })`
+- Server verifies the JWT on connection using `jose` — rejects unauthenticated connections
+- Socket.io event payloads are **not filtered** by hidden columns (broadcast is the same for all users — column filtering happens client-side in FleetTable)
+- The `socket.ts` client library is updated to read the token from a cookie or pass it explicitly
+
+## Export Filtering
+
+- The `/api/export` route reads the requesting user's `hiddenColumns` from the database
+- Hidden columns are excluded from the exported Excel file
+- The user ID is extracted from the JWT cookie (same as other protected routes)
 
 ## Dependencies (new)
 
@@ -187,8 +213,9 @@ src/
 │   ├── bootstrap.ts                    (NEW - create admin user on startup)
 │   ├── db.ts                           (UNCHANGED)
 │   ├── types.ts                        (MODIFIED - add User type, AuthUser type)
-│   └── socket.ts                       (UNCHANGED)
+│   └── socket.ts                       (MODIFIED - pass JWT in auth handshake)
 ├── middleware.ts                        (NEW - route protection)
+server.js                               (MODIFIED - verify JWT on Socket.io connection)
 ```
 
 ## Environment Variables (new)
@@ -208,3 +235,7 @@ JWT_SECRET=<random-64-char-string>
 - Admin routes double-check `isAdmin` claim from JWT against the database
 - SQL queries use parameterized inputs (existing pattern continues)
 - No sensitive data in JWT payload beyond userId, username, isAdmin
+- Admin routes verify `isAdmin` from the database on every request, not just the JWT claim — so demoting an admin takes effect immediately
+- Login endpoint has brute-force protection (5 attempts → 15-minute lockout)
+- Column visibility is a UI preference, not a security boundary — users with dev tools can see all data in API responses
+- Password minimum length: 6 characters, enforced on user creation/update
