@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { FleetRecord, FleetStats } from '@/lib/types';
 import { getSocket } from '@/lib/socket';
 import StatsCards from './StatsCards';
@@ -29,8 +30,16 @@ export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [updatedRowIds, setUpdatedRowIds] = useState<Set<number>>(new Set());
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [showAdmin, setShowAdmin] = useState(false);
+  const router = useRouter();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login');
+    }
+  }, [authLoading, user, router]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -180,6 +189,9 @@ export default function Dashboard() {
     if (filters.fleet_type) params.set('fleet_type', filters.fleet_type);
     window.open(`/api/export?${params}`, '_blank');
   };
+
+  // Show nothing while checking auth (prevents flash)
+  if (authLoading || !user) return null;
 
   return (
     <div className="min-h-screen">
