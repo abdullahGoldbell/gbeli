@@ -30,6 +30,9 @@ export interface FleetRecord {
   equipment_type: string | null;
   serviceable: string | null;
   salesman_name: string | null;
+  release_status: string | null;
+  reservation_date: string | null;
+  reserved_by: string | null;
   updated_at: string | null;
   updated_by: string | null;
 }

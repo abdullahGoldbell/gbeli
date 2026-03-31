@@ -19,6 +19,7 @@ export default function AddVehicleModal({ onClose, onSubmit }: Props) {
     yor: '',
     yom: '',
     condition: 'OK',
+    release_status: 'Hold',
     customer_name: '',
     salesman_name: '',
     remarks: '',
@@ -69,8 +70,17 @@ export default function AddVehicleModal({ onClose, onSubmit }: Props) {
             <label className="text-xs text-neutral-500 font-medium">Condition</label>
             <select value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })}
               className="w-full px-3 py-2 border rounded-md text-sm">
-              {['OK', 'REPAIRING', 'REPAIRED', 'SOLD', 'SCRAPPED', 'INTER', 'PENDING'].map((c) => (
+              {['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'].map((c) => (
                 <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-neutral-500 font-medium">Release Status</label>
+            <select value={form.release_status} onChange={(e) => setForm({ ...form, release_status: e.target.value })}
+              className="w-full px-3 py-2 border rounded-md text-sm">
+              {['Release', 'Hold', 'Reserved'].map((s) => (
+                <option key={s} value={s}>{s}</option>
               ))}
             </select>
           </div>

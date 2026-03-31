@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool, sql } from '@/lib/db';
+import { sendReservationNotification } from '@/lib/email';
 
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -8,6 +9,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const pool = await getPool();
     const body = await req.json();
 
+    const isAdmin = req.headers.get('x-user-is-admin') === 'true';
+    const userName = req.headers.get('x-user-name') || 'Unknown';
+
     // Build dynamic SET clause from provided fields
     const allowedFields = [
       'fleet_type', 'category', 'in_out_date', 'brand', 'model', 'model2',
@@ -15,7 +19,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       'yor', 'yom', 'battery', 'lta_reg', 'customer_name', 'rental', 'sales',
       'scrap', 'repair_cost', 'condition', 'remarks', 'customer_requirements',
       'location', 'postal_code', 'volts', 'equipment_type', 'serviceable', 'salesman_name', 'updated_by',
+      'release_status', 'reservation_date', 'reserved_by',
     ];
+
+    // Non-admin enforcement: only allow reservation_date
+    if (!isAdmin) {
+      const requestedFields = allowedFields.filter((f) => f in body);
+      const disallowedFields = requestedFields.filter((f) => f !== 'reservation_date' && f !== 'updated_by');
+      if (disallowedFields.length > 0) {
+        return NextResponse.json(
+          { error: `Sales users can only edit reservation_date. Disallowed: ${disallowedFields.join(', ')}` },
+          { status: 403 },
+        );
+      }
+
+      // Auto-populate reserved_by with the sales user's name when setting reservation_date
+      if ('reservation_date' in body) {
+        body.reserved_by = userName;
+      }
+    }
 
     const setClauses: string[] = ['updated_at = GETDATE()'];
     const request = pool.request();
@@ -54,6 +76,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       serviceable: sql.VarChar(50),
       salesman_name: sql.VarChar(100),
       updated_by: sql.VarChar(50),
+      release_status: sql.VarChar(20),
+      reservation_date: sql.Date,
+      reserved_by: sql.VarChar(100),
     };
 
     for (const field of allowedFields) {
@@ -74,7 +99,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (result.recordset.length === 0) {
       return NextResponse.json({ error: 'Record not found' }, { status: 404 });
     }
-    return NextResponse.json(result.recordset[0]);
+
+    const updated = result.recordset[0];
+
+    // Send email notification when reservation is made
+    if ('reservation_date' in body && body.reservation_date) {
+      sendReservationNotification(
+        updated.veh_no,
+        updated.reserved_by || userName,
+        body.reservation_date,
+      );
+    }
+
+    return NextResponse.json(updated);
   } catch (error) {
     console.error('PUT /api/fleet/[id] error:', error);
     return NextResponse.json({ error: 'Failed to update record' }, { status: 500 });

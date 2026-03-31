@@ -18,9 +18,10 @@ interface Props {
   conditions: string[];
   onExport: () => void;
   onAdd: () => void;
+  showAdd?: boolean;
 }
 
-export default function Filters({ filters, onFilterChange, brands, categories, conditions, onExport, onAdd }: Props) {
+export default function Filters({ filters, onFilterChange, brands, categories, conditions, onExport, onAdd, showAdd = true }: Props) {
   const update = useCallback((key: keyof FilterState, value: string) => {
     onFilterChange({ ...filters, [key]: value });
   }, [filters, onFilterChange]);
@@ -88,12 +89,14 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
 
         <div className="flex-1" />
 
-        <button
-          onClick={onAdd}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-        >
-          + Add Vehicle
-        </button>
+        {showAdd && (
+          <button
+            onClick={onAdd}
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+          >
+            + Add Vehicle
+          </button>
+        )}
 
         <button
           onClick={onExport}

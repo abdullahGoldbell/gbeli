@@ -8,11 +8,17 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const fleetType = searchParams.get('fleet_type');
 
-    let query = 'SELECT * FROM fleet';
+    const isAdmin = req.headers.get('x-user-is-admin') === 'true';
+
+    let query = 'SELECT * FROM fleet WHERE 1=1';
     const request = pool.request();
     if (fleetType) {
-      query += ' WHERE fleet_type = @fleetType';
+      query += ' AND fleet_type = @fleetType';
       request.input('fleetType', sql.VarChar, fleetType);
+    }
+    // Non-admin users only see Release rows
+    if (!isAdmin) {
+      query += " AND (release_status = 'Release' OR release_status IS NULL)";
     }
     query += ' ORDER BY fleet_type, category, veh_no';
 

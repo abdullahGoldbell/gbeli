@@ -13,30 +13,48 @@ export function ensureBootstrap(): Promise<void> {
 async function doBootstrap(): Promise<void> {
   const pool = await getPool();
 
-  // Create users table if not exists
-  await pool.request().query(`
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'users')
-    CREATE TABLE users (
-      id INT IDENTITY(1,1) PRIMARY KEY,
-      username VARCHAR(100) NOT NULL UNIQUE,
-      password_hash VARCHAR(255) NOT NULL,
-      display_name VARCHAR(200) NULL,
-      is_admin BIT NOT NULL DEFAULT 0,
-      created_at DATETIME NOT NULL DEFAULT GETDATE(),
-      updated_at DATETIME NOT NULL DEFAULT GETDATE()
-    )
-  `);
+  try {
+    // Create users table if not exists
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'users')
+      CREATE TABLE users (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        display_name VARCHAR(200) NULL,
+        is_admin BIT NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT GETDATE(),
+        updated_at DATETIME NOT NULL DEFAULT GETDATE()
+      )
+    `);
 
-  // Create user_hidden_columns table if not exists
-  await pool.request().query(`
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'user_hidden_columns')
-    CREATE TABLE user_hidden_columns (
-      id INT IDENTITY(1,1) PRIMARY KEY,
-      user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      column_key VARCHAR(50) NOT NULL,
-      CONSTRAINT UQ_user_column UNIQUE (user_id, column_key)
-    )
-  `);
+    // Create user_hidden_columns table if not exists
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'user_hidden_columns')
+      CREATE TABLE user_hidden_columns (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        column_key VARCHAR(50) NOT NULL,
+        CONSTRAINT UQ_user_column UNIQUE (user_id, column_key)
+      )
+    `);
+
+    // Add release_status, reservation_date, reserved_by columns to fleet if not exists
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'release_status')
+        ALTER TABLE fleet ADD release_status VARCHAR(20) NULL DEFAULT 'Release'
+    `);
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'reservation_date')
+        ALTER TABLE fleet ADD reservation_date DATE NULL
+    `);
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'reserved_by')
+        ALTER TABLE fleet ADD reserved_by VARCHAR(100) NULL
+    `);
+  } catch (err) {
+    console.warn('Bootstrap DDL failed (tables/columns may already exist):', err);
+  }
 
   // Seed admin user from env vars
   const adminUsername = process.env.ADMIN_USERNAME || 'admin';

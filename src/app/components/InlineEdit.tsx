@@ -7,10 +7,11 @@ interface Props {
   field: string;
   type?: 'text' | 'number' | 'checkbox' | 'select' | 'date';
   options?: string[];
+  readOnly?: boolean;
   onSave: (field: string, value: string | number | boolean | null) => void;
 }
 
-export default function InlineEdit({ value, field, type = 'text', options, onSave }: Props) {
+export default function InlineEdit({ value, field, type = 'text', options, readOnly, onSave }: Props) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
@@ -29,22 +30,23 @@ export default function InlineEdit({ value, field, type = 'text', options, onSav
       <input
         type="checkbox"
         checked={!!value}
-        onChange={(e) => onSave(field, e.target.checked)}
-        className="w-4 h-4 accent-blue-600 cursor-pointer"
+        onChange={(e) => !readOnly && onSave(field, e.target.checked)}
+        disabled={readOnly}
+        className={`w-4 h-4 accent-blue-600 ${readOnly ? 'opacity-60' : 'cursor-pointer'}`}
       />
     );
   }
 
-  if (!editing) {
+  if (readOnly || !editing) {
     const displayVal = value === null || value === undefined ? '' : String(value);
     return (
       <div
-        onClick={() => {
+        onClick={readOnly ? undefined : () => {
           setEditValue(displayVal);
           setEditing(true);
         }}
-        className="cursor-pointer min-h-[1.5em] px-1 py-0.5 rounded hover:bg-blue-50 truncate"
-        title={displayVal || 'Click to edit'}
+        className={`min-h-[1.5em] px-1 py-0.5 rounded truncate ${readOnly ? 'text-neutral-600' : 'cursor-pointer hover:bg-blue-50'}`}
+        title={readOnly ? displayVal : (displayVal || 'Click to edit')}
       >
         {displayVal || <span className="text-neutral-300">-</span>}
       </div>

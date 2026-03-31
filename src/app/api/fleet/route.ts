@@ -13,8 +13,15 @@ export async function GET(req: NextRequest) {
     const brand = searchParams.get('brand');
     const category = searchParams.get('category');
 
+    const isAdmin = req.headers.get('x-user-is-admin') === 'true';
+
     let query = 'SELECT * FROM fleet WHERE 1=1';
     const request = pool.request();
+
+    // Non-admin users only see rows with release_status = 'Release'
+    if (!isAdmin) {
+      query += " AND (release_status = 'Release' OR release_status IS NULL)";
+    }
 
     if (fleetType) {
       query += ' AND fleet_type = @fleetType';
@@ -84,16 +91,21 @@ export async function POST(req: NextRequest) {
       .input('equipment_type', sql.VarChar, body.equipment_type || null)
       .input('serviceable', sql.VarChar, body.serviceable || null)
       .input('salesman_name', sql.VarChar, body.salesman_name || null)
+      .input('release_status', sql.VarChar, body.release_status || 'Release')
+      .input('reservation_date', sql.Date, body.reservation_date || null)
+      .input('reserved_by', sql.VarChar, body.reserved_by || null)
       .input('updated_by', sql.VarChar, body.updated_by || null)
       .query(`INSERT INTO fleet (fleet_type, category, in_out_date, brand, model, model2, replace_ref,
         veh_no, container_mast, chassis, mast, attachment, yor, yom, battery, lta_reg,
         customer_name, rental, sales, scrap, repair_cost, condition, remarks,
-        customer_requirements, location, postal_code, volts, equipment_type, serviceable, salesman_name, updated_by)
+        customer_requirements, location, postal_code, volts, equipment_type, serviceable, salesman_name,
+        release_status, reservation_date, reserved_by, updated_by)
         OUTPUT INSERTED.*
         VALUES (@fleet_type, @category, @in_out_date, @brand, @model, @model2, @replace_ref,
         @veh_no, @container_mast, @chassis, @mast, @attachment, @yor, @yom, @battery, @lta_reg,
         @customer_name, @rental, @sales, @scrap, @repair_cost, @condition, @remarks,
-        @customer_requirements, @location, @postal_code, @volts, @equipment_type, @serviceable, @salesman_name, @updated_by)`);
+        @customer_requirements, @location, @postal_code, @volts, @equipment_type, @serviceable, @salesman_name,
+        @release_status, @reservation_date, @reserved_by, @updated_by)`);
 
     return NextResponse.json(result.recordset[0], { status: 201 });
   } catch (error) {

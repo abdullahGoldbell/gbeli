@@ -29,7 +29,7 @@ export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [updatedRowIds, setUpdatedRowIds] = useState<Set<number>>(new Set());
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [showAdmin, setShowAdmin] = useState(false);
 
   const fetchStats = useCallback(async () => {
@@ -62,18 +62,31 @@ export default function Dashboard() {
     }
   }, [filters]);
 
-  // Initial load
+  // Initial load — wait for auth to be ready
   useEffect(() => {
-    fetchData();
-    fetchStats();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!authLoading) {
+      fetchData();
+      fetchStats();
+    }
+  }, [authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Socket.io real-time updates
   useEffect(() => {
     const socket = getSocket();
 
     socket.on('fleet:updated', (record: FleetRecord) => {
-      setData((prev) => prev.map((r) => (r.id === record.id ? record : r)));
+      // Non-admin: ignore records that aren't "Release"
+      if (!user?.isAdmin && record.release_status !== 'Release' && record.release_status !== null) {
+        // Remove from view if it was previously visible
+        setData((prev) => prev.filter((r) => r.id !== record.id));
+        return;
+      }
+      setData((prev) => {
+        const exists = prev.some((r) => r.id === record.id);
+        if (exists) return prev.map((r) => (r.id === record.id ? record : r));
+        // Record became visible (e.g. changed to Release)
+        return [...prev, record];
+      });
       setUpdatedRowIds((prev) => new Set(prev).add(record.id));
       setTimeout(() => {
         setUpdatedRowIds((prev) => {
@@ -87,6 +100,8 @@ export default function Dashboard() {
     });
 
     socket.on('fleet:created', (record: FleetRecord) => {
+      // Non-admin: only show Release records
+      if (!user?.isAdmin && record.release_status !== 'Release' && record.release_status !== null) return;
       setData((prev) => [...prev, record]);
       showToast(`${record.veh_no} added to fleet`, 'success');
       fetchStats();
@@ -103,7 +118,7 @@ export default function Dashboard() {
       socket.off('fleet:created');
       socket.off('fleet:deleted');
     };
-  }, [fetchStats]);
+  }, [fetchStats, user?.isAdmin]);
 
   // Filter change with debounce for search
   const handleFilterChange = useCallback((newFilters: FilterState) => {
@@ -181,6 +196,14 @@ export default function Dashboard() {
     window.open(`/api/export?${params}`, '_blank');
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-neutral-400">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <Notifications />
@@ -232,13 +255,14 @@ export default function Dashboard() {
           conditions={conditions}
           onExport={handleExport}
           onAdd={() => setShowAddModal(true)}
+          showAdd={!!user?.isAdmin}
         />
         {loading ? (
           <div className="bg-white rounded-lg p-12 text-center text-neutral-400">
             Loading fleet data...
           </div>
         ) : (
-          <FleetTable data={data} onUpdate={handleUpdate} onDelete={handleDelete} updatedRowIds={updatedRowIds} hiddenColumns={user?.hiddenColumns || []} />
+          <FleetTable data={data} onUpdate={handleUpdate} onDelete={handleDelete} updatedRowIds={updatedRowIds} hiddenColumns={user?.hiddenColumns || []} isAdmin={!!user?.isAdmin} />
         )}
       </main>
 

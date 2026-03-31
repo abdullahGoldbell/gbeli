@@ -14,57 +14,45 @@ interface UserRecord {
 
 const COLUMN_GROUPS = [
   {
-    label: 'Vehicle Info',
+    label: 'Table Columns (in order)',
     columns: [
       { key: 'fleet_type', label: 'Type' },
       { key: 'veh_no', label: 'Veh No' },
       { key: 'brand', label: 'Brand' },
       { key: 'model', label: 'Model' },
-      { key: 'model2', label: 'Model 2' },
       { key: 'category', label: 'Category' },
-      { key: 'chassis', label: 'Chassis' },
-      { key: 'mast', label: 'Mast' },
-      { key: 'container_mast', label: 'Container/Mast' },
-      { key: 'attachment', label: 'Attachment' },
-      { key: 'yor', label: 'YOR' },
-      { key: 'yom', label: 'YOM' },
-    ],
-  },
-  {
-    label: 'Status & Assignment',
-    columns: [
       { key: 'condition', label: 'Condition' },
+      { key: 'release_status', label: 'Status' },
+      { key: 'reservation_date', label: 'Reservation' },
+      { key: 'reserved_by', label: 'Reserved By' },
       { key: 'customer_name', label: 'Customer' },
       { key: 'salesman_name', label: 'Salesman' },
-      { key: 'location', label: 'Location' },
-      { key: 'postal_code', label: 'Postal Code' },
-    ],
-  },
-  {
-    label: 'Financial',
-    columns: [
+      { key: 'chassis', label: 'Chassis' },
+      { key: 'mast', label: 'Mast' },
+      { key: 'yor', label: 'YOR' },
+      { key: 'yom', label: 'YOM' },
       { key: 'rental', label: 'Rental' },
       { key: 'sales', label: 'Sales' },
       { key: 'scrap', label: 'Scrap' },
-      { key: 'repair_cost', label: 'Repair Cost' },
+      { key: 'remarks', label: 'Remarks' },
+      { key: 'location', label: 'Location' },
+      { key: 'replace_ref', label: 'Name' },
     ],
   },
   {
-    label: 'Technical',
+    label: 'Additional Columns',
     columns: [
+      { key: 'model2', label: 'Model 2' },
+      { key: 'container_mast', label: 'Container/Mast' },
+      { key: 'attachment', label: 'Attachment' },
       { key: 'battery', label: 'Battery' },
       { key: 'lta_reg', label: 'LTA Reg' },
+      { key: 'postal_code', label: 'Postal Code' },
       { key: 'volts', label: 'Volts' },
       { key: 'equipment_type', label: 'Equipment Type' },
       { key: 'serviceable', label: 'Serviceable' },
-    ],
-  },
-  {
-    label: 'Other',
-    columns: [
-      { key: 'remarks', label: 'Remarks' },
+      { key: 'repair_cost', label: 'Repair Cost' },
       { key: 'customer_requirements', label: 'Customer Req.' },
-      { key: 'replace_ref', label: 'Replace Ref' },
       { key: 'in_out_date', label: 'In/Out Date' },
     ],
   },
@@ -180,9 +168,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
     });
   };
 
+  const [colSaveMsg, setColSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   const saveColumnAccess = async () => {
     if (!selectedUserId) return;
     setSavingCols(true);
+    setColSaveMsg(null);
     try {
       const res = await fetch(`/api/admin/users/${selectedUserId}`, {
         method: 'PUT',
@@ -192,11 +183,16 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
       if (res.ok) {
         fetchUsers();
         if (selectedUserId === currentUser?.userId) {
-          refreshUser();
+          await refreshUser();
         }
+        setColSaveMsg({ type: 'success', text: 'Column access saved. User must re-login to see changes.' });
+      } else {
+        const data = await res.json();
+        setColSaveMsg({ type: 'error', text: data.error || 'Failed to save column access' });
       }
     } catch (err) {
       console.error('Failed to save columns:', err);
+      setColSaveMsg({ type: 'error', text: 'Network error saving column access' });
     } finally {
       setSavingCols(false);
     }
@@ -423,6 +419,12 @@ export default function AdminPanel({ onClose }: AdminPanelProps) {
                       </div>
                     </div>
                   ))}
+
+                  {colSaveMsg && (
+                    <p className={`text-sm mt-2 ${colSaveMsg.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                      {colSaveMsg.text}
+                    </p>
+                  )}
 
                   <button
                     onClick={saveColumnAccess}
