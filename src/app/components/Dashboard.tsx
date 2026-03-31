@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { FleetRecord, FleetStats } from '@/lib/types';
 import { getSocket } from '@/lib/socket';
 import StatsCards from './StatsCards';
@@ -31,6 +32,14 @@ export default function Dashboard() {
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { user, loading: authLoading, logout } = useAuth();
   const [showAdmin, setShowAdmin] = useState(false);
+  const router = useRouter();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login');
+    }
+  }, [authLoading, user, router]);
 
   const fetchStats = useCallback(async () => {
     try {
