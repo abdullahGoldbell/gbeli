@@ -146,14 +146,6 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
           <InlineEdit value={getValue()} field="model2" readOnly={ro} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
         ),
       }),
-      columnHelper.accessor('category', {
-        header: 'Category',
-        size: 80,
-        minSize: 60,
-        cell: ({ row, getValue }) => (
-          <InlineEdit value={getValue()} field="category" readOnly={ro} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
-        ),
-      }),
       columnHelper.accessor('condition', {
         header: 'Condition',
         size: 100,
