@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -25,6 +25,67 @@ interface Props {
 }
 
 const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'];
+
+function ReservationDateCell({ value, onSave }: { value: string | null; onSave: (date: string | null) => void }) {
+  const formatted = value && value.includes('T') ? value.split('T')[0] : (value || '');
+  const [editing, setEditing] = useState(false);
+  const [dateVal, setDateVal] = useState(formatted);
+
+  const handleOpen = useCallback(() => {
+    setDateVal(formatted);
+    setEditing(true);
+  }, [formatted]);
+
+  const handleConfirm = useCallback(() => {
+    setEditing(false);
+    if (dateVal !== formatted) {
+      onSave(dateVal || null);
+    }
+  }, [dateVal, formatted, onSave]);
+
+  const handleCancel = useCallback(() => {
+    setEditing(false);
+    setDateVal(formatted);
+  }, [formatted]);
+
+  if (!editing) {
+    return (
+      <div
+        onClick={handleOpen}
+        className="cursor-pointer min-h-[1.5em] px-1 py-0.5 rounded hover:bg-blue-50 truncate"
+        title={formatted || 'Click to set date'}
+      >
+        {formatted || <span className="text-neutral-300">-</span>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <input
+        type="date"
+        value={dateVal}
+        onChange={(e) => setDateVal(e.target.value)}
+        autoFocus
+        className="flex-1 px-1 py-0.5 text-sm border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+      />
+      <button
+        onClick={handleConfirm}
+        className="px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+        title="Save"
+      >
+        Save
+      </button>
+      <button
+        onClick={handleCancel}
+        className="px-1 py-0.5 text-neutral-400 hover:text-neutral-600 text-xs"
+        title="Cancel"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
 const RELEASE_STATUSES = ['Release', 'Hold', 'Reserved'];
 
 export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hiddenColumns, isAdmin }: Props) {
@@ -125,14 +186,12 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
       }),
       columnHelper.accessor('reservation_date', {
         header: 'Reservation',
-        size: 120,
-        minSize: 90,
+        size: 200,
+        minSize: 150,
         cell: ({ row, getValue }) => (
-          <InlineEdit
+          <ReservationDateCell
             value={getValue()}
-            field="reservation_date"
-            type="date"
-            onSave={(f, v) => onUpdate(row.original.id, f, v)}
+            onSave={(date) => onUpdate(row.original.id, 'reservation_date', date)}
           />
         ),
       }),

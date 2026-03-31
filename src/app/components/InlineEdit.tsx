@@ -38,7 +38,11 @@ export default function InlineEdit({ value, field, type = 'text', options, readO
   }
 
   if (readOnly || !editing) {
-    const displayVal = value === null || value === undefined ? '' : String(value);
+    let displayVal = value === null || value === undefined ? '' : String(value);
+    // Format ISO dates to YYYY-MM-DD
+    if (type === 'date' && displayVal && displayVal.includes('T')) {
+      displayVal = displayVal.split('T')[0];
+    }
     return (
       <div
         onClick={readOnly ? undefined : () => {
