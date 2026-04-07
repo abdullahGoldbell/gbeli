@@ -10,9 +10,9 @@ export async function GET() {
         SUM(CASE WHEN fleet_type = 'ELECTRICAL' THEN 1 ELSE 0 END) as electrical,
         SUM(CASE WHEN fleet_type = 'DIESEL' THEN 1 ELSE 0 END) as diesel,
         SUM(CASE WHEN condition = 'REPAIRING' THEN 1 ELSE 0 END) as inRepair,
-        SUM(CAST(ISNULL(rental, 0) AS INT)) as onRental,
-        SUM(CAST(ISNULL(sales, 0) AS INT)) as forSale,
-        SUM(CAST(ISNULL(scrap, 0) AS INT)) as scrapped
+        0 as onRental,
+        0 as forSale,
+        0 as scrapped
       FROM fleet
     `);
 

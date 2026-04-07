@@ -16,8 +16,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const allowedFields = [
       'fleet_type', 'category', 'in_out_date', 'brand', 'model', 'model2',
       'replace_ref', 'veh_no', 'container_mast', 'chassis', 'mast', 'attachment',
-      'yor', 'yom', 'battery', 'lta_reg', 'customer_name', 'rental', 'sales',
-      'scrap', 'repair_cost', 'condition', 'remarks', 'customer_requirements',
+      'yor', 'yom', 'battery', 'lta_reg', 'customer_name',
+      'repair_cost', 'condition', 'remarks', 'customer_requirements',
       'location', 'postal_code', 'volts', 'equipment_type', 'serviceable', 'salesman_name', 'updated_by',
       'release_status', 'reservation_date', 'reserved_by',
     ];
@@ -62,9 +62,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       battery: sql.VarChar(50),
       lta_reg: sql.VarChar(20),
       customer_name: sql.VarChar(200),
-      rental: sql.Bit,
-      sales: sql.Bit,
-      scrap: sql.Bit,
       repair_cost: sql.Decimal(10, 2),
       condition: sql.VarChar(50),
       remarks: sql.NVarChar(500),
@@ -85,9 +82,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       if (field in body) {
         let value = body[field];
         if (value === '' || value === undefined) value = null;
-        if ((field === 'rental' || field === 'sales' || field === 'scrap') && value !== null) {
-          value = value ? 1 : 0;
-        }
         request.input(field, sqlTypes[field], value);
         setClauses.push(`${field} = @${field}`);
       }

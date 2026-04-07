@@ -17,9 +17,6 @@ export interface FleetRecord {
   battery: string | null;
   lta_reg: string | null;
   customer_name: string | null;
-  rental: boolean;
-  sales: boolean;
-  scrap: boolean;
   repair_cost: number | null;
   condition: string | null;
   remarks: string | null;

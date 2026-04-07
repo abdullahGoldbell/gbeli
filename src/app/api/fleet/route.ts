@@ -78,9 +78,6 @@ export async function POST(req: NextRequest) {
       .input('battery', sql.VarChar, body.battery || null)
       .input('lta_reg', sql.VarChar, body.lta_reg || null)
       .input('customer_name', sql.VarChar, body.customer_name || null)
-      .input('rental', sql.Bit, body.rental ? 1 : 0)
-      .input('sales', sql.Bit, body.sales ? 1 : 0)
-      .input('scrap', sql.Bit, body.scrap ? 1 : 0)
       .input('repair_cost', sql.Decimal(10, 2), body.repair_cost || null)
       .input('condition', sql.VarChar, body.condition || null)
       .input('remarks', sql.NVarChar, body.remarks || null)
@@ -97,13 +94,13 @@ export async function POST(req: NextRequest) {
       .input('updated_by', sql.VarChar, body.updated_by || null)
       .query(`INSERT INTO fleet (fleet_type, category, in_out_date, brand, model, model2, replace_ref,
         veh_no, container_mast, chassis, mast, attachment, yor, yom, battery, lta_reg,
-        customer_name, rental, sales, scrap, repair_cost, condition, remarks,
+        customer_name, repair_cost, condition, remarks,
         customer_requirements, location, postal_code, volts, equipment_type, serviceable, salesman_name,
         release_status, reservation_date, reserved_by, updated_by)
         OUTPUT INSERTED.*
         VALUES (@fleet_type, @category, @in_out_date, @brand, @model, @model2, @replace_ref,
         @veh_no, @container_mast, @chassis, @mast, @attachment, @yor, @yom, @battery, @lta_reg,
-        @customer_name, @rental, @sales, @scrap, @repair_cost, @condition, @remarks,
+        @customer_name, @repair_cost, @condition, @remarks,
         @customer_requirements, @location, @postal_code, @volts, @equipment_type, @serviceable, @salesman_name,
         @release_status, @reservation_date, @reserved_by, @updated_by)`);
 

@@ -248,30 +248,6 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
           <InlineEdit value={getValue()} field="yom" type="number" readOnly={ro} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
         ),
       }),
-      columnHelper.accessor('rental', {
-        header: 'Rental',
-        size: 55,
-        minSize: 45,
-        cell: ({ row, getValue }) => (
-          <InlineEdit value={getValue()} field="rental" type="checkbox" readOnly={ro} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
-        ),
-      }),
-      columnHelper.accessor('sales', {
-        header: 'Sales',
-        size: 55,
-        minSize: 45,
-        cell: ({ row, getValue }) => (
-          <InlineEdit value={getValue()} field="sales" type="checkbox" readOnly={ro} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
-        ),
-      }),
-      columnHelper.accessor('scrap', {
-        header: 'Scrap',
-        size: 55,
-        minSize: 45,
-        cell: ({ row, getValue }) => (
-          <InlineEdit value={getValue()} field="scrap" type="checkbox" readOnly={ro} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
-        ),
-      }),
       columnHelper.accessor('remarks', {
         header: 'Remarks',
         size: 180,
