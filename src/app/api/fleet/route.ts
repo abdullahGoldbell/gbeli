@@ -18,9 +18,9 @@ export async function GET(req: NextRequest) {
     let query = 'SELECT * FROM fleet WHERE 1=1';
     const request = pool.request();
 
-    // Non-admin users only see rows with release_status = 'Release'
+    // Non-admin users cannot see Release vehicles
     if (!isAdmin) {
-      query += " AND (release_status = 'Release' OR release_status IS NULL)";
+      query += " AND (release_status IS NULL OR release_status <> 'Release')";
     }
 
     if (fleetType) {

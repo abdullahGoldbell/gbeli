@@ -84,9 +84,8 @@ export default function Dashboard() {
     const socket = getSocket();
 
     socket.on('fleet:updated', (record: FleetRecord) => {
-      // Non-admin: ignore records that aren't "Release"
-      if (!user?.isAdmin && record.release_status !== 'Release' && record.release_status !== null) {
-        // Remove from view if it was previously visible
+      // Non-admin: hide all Release vehicles
+      if (!user?.isAdmin && record.release_status === 'Release') {
         setData((prev) => prev.filter((r) => r.id !== record.id));
         return;
       }
@@ -109,8 +108,8 @@ export default function Dashboard() {
     });
 
     socket.on('fleet:created', (record: FleetRecord) => {
-      // Non-admin: only show Release records
-      if (!user?.isAdmin && record.release_status !== 'Release' && record.release_status !== null) return;
+      // Non-admin: hide all Release vehicles
+      if (!user?.isAdmin && record.release_status === 'Release') return;
       setData((prev) => [...prev, record]);
       showToast(`${record.veh_no} added to fleet`, 'success');
       fetchStats();
