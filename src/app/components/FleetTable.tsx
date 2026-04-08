@@ -237,6 +237,14 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
           <InlineEdit value={getValue()} field="mast" readOnly={ro} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
         ),
       }),
+      columnHelper.accessor('attachment', {
+        header: 'Attachment',
+        size: 100,
+        minSize: 60,
+        cell: ({ row, getValue }) => (
+          <InlineEdit value={getValue()} field="attachment" readOnly={ro} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
+        ),
+      }),
       columnHelper.accessor('yor', {
         header: 'YOR',
         size: 55,
