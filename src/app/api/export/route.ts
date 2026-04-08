@@ -16,9 +16,9 @@ export async function GET(req: NextRequest) {
       query += ' AND fleet_type = @fleetType';
       request.input('fleetType', sql.VarChar, fleetType);
     }
-    // Non-admin users only see Release rows
+    // Non-admin users can only see Release vehicles
     if (!isAdmin) {
-      query += " AND (release_status = 'Release' OR release_status IS NULL)";
+      query += " AND release_status = 'Release'";
     }
     query += ' ORDER BY fleet_type, category, veh_no';
 

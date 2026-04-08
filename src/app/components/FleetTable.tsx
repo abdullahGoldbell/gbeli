@@ -86,7 +86,7 @@ function ReservationDateCell({ value, onSave }: { value: string | null; onSave: 
     </div>
   );
 }
-const RELEASE_STATUSES = ['Release', 'Hold', 'Reserved'];
+const RELEASE_STATUSES = ['Release', 'Hold'];
 
 export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hiddenColumns, isAdmin }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -191,7 +191,12 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
         header: 'Reserved By',
         size: 120,
         minSize: 80,
-        cell: ({ getValue }) => {
+        cell: ({ row, getValue }) => {
+          if (isAdmin) {
+            return (
+              <InlineEdit value={getValue()} field="reserved_by" readOnly={false} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
+            );
+          }
           const val = getValue();
           return (
             <div className="min-h-[1.5em] px-1 py-0.5 truncate text-neutral-600">
