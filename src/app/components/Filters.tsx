@@ -18,10 +18,11 @@ interface Props {
   conditions: string[];
   onExport: () => void;
   onAdd: () => void;
+  onUpload: () => void;
   showAdd?: boolean;
 }
 
-export default function Filters({ filters, onFilterChange, brands, categories, conditions, onExport, onAdd, showAdd = true }: Props) {
+export default function Filters({ filters, onFilterChange, brands, categories, conditions, onExport, onAdd, onUpload, showAdd = true }: Props) {
   const update = useCallback((key: keyof FilterState, value: string) => {
     onFilterChange({ ...filters, [key]: value });
   }, [filters, onFilterChange]);
@@ -90,12 +91,20 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
         <div className="flex-1" />
 
         {showAdd && (
-          <button
-            onClick={onAdd}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
-          >
-            + Add Vehicle
-          </button>
+          <>
+            <button
+              onClick={onUpload}
+              className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-md hover:bg-violet-700 transition-colors"
+            >
+              &#8593; Upload Excel
+            </button>
+            <button
+              onClick={onAdd}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+            >
+              + Add Vehicle
+            </button>
+          </>
         )}
 
         <button

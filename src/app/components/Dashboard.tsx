@@ -9,6 +9,7 @@ import Filters from './Filters';
 import FleetTable from './FleetTable';
 import Notifications, { showToast } from './Notifications';
 import AddVehicleModal from './AddVehicleModal';
+import UploadModal from './UploadModal';
 import { useAuth } from './AuthProvider';
 import AdminPanel from './AdminPanel';
 
@@ -28,6 +29,7 @@ export default function Dashboard() {
     fleet_type: '', condition: '', brand: '', category: '', search: '',
   });
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [updatedRowIds, setUpdatedRowIds] = useState<Set<number>>(new Set());
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { user, loading: authLoading, logout } = useAuth();
@@ -263,6 +265,7 @@ export default function Dashboard() {
           conditions={conditions}
           onExport={handleExport}
           onAdd={() => setShowAddModal(true)}
+          onUpload={() => setShowUploadModal(true)}
           showAdd={!!user?.isAdmin}
         />
         {loading ? (
@@ -275,6 +278,15 @@ export default function Dashboard() {
       </main>
 
       {showAddModal && <AddVehicleModal onClose={() => setShowAddModal(false)} onSubmit={handleAdd} />}
+      {showUploadModal && (
+        <UploadModal
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={() => {
+            fetchData();
+            fetchStats();
+          }}
+        />
+      )}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
     </div>
   );
