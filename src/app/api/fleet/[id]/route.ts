@@ -33,8 +33,30 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         );
       }
 
-      // Auto-populate reserved_by with the sales user's name when setting reservation_date
       if ('reservation_date' in body) {
+        // Check existing reservation — non-admin cannot overwrite
+        const existing = await pool.request()
+          .input('id', sql.Int, parseInt(id))
+          .query('SELECT reservation_date FROM fleet WHERE id = @id');
+        const currentDate = existing.recordset[0]?.reservation_date;
+
+        if (currentDate) {
+          return NextResponse.json(
+            { error: 'Vehicle already reserved. Cannot overwrite or clear existing reservation.' },
+            { status: 403 },
+          );
+        }
+
+        // Force reservation_date = today (server authoritative)
+        if (body.reservation_date) {
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = String(now.getMonth() + 1).padStart(2, '0');
+          const d = String(now.getDate()).padStart(2, '0');
+          body.reservation_date = `${y}-${m}-${d}`;
+        }
+
+        // Auto-populate reserved_by with the sales user's name
         body.reserved_by = userName;
       }
     }

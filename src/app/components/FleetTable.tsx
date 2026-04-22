@@ -26,7 +26,15 @@ interface Props {
 
 const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'];
 
-function ReservationDateCell({ value, onSave }: { value: string | null; onSave: (date: string | null) => void }) {
+function todayISO(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function ReservationDateCell({ value, onSave, isAdmin }: { value: string | null; onSave: (date: string | null) => void; isAdmin: boolean }) {
   const formatted = value && value.includes('T') ? value.split('T')[0] : (value || '');
   const [editing, setEditing] = useState(false);
   const [dateVal, setDateVal] = useState(formatted);
@@ -47,6 +55,29 @@ function ReservationDateCell({ value, onSave }: { value: string | null; onSave: 
     setEditing(false);
     setDateVal(formatted);
   }, [formatted]);
+
+  // Non-admin: no date picker. Reserve button sets today; locked once reserved.
+  if (!isAdmin) {
+    if (formatted) {
+      return (
+        <div
+          className="min-h-[1.5em] px-1 py-0.5 truncate text-neutral-700"
+          title={`Reserved on ${formatted} (auto-clears after 2 days)`}
+        >
+          {formatted}
+        </div>
+      );
+    }
+    return (
+      <button
+        onClick={() => onSave(todayISO())}
+        className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+        title="Reserve today"
+      >
+        Reserve
+      </button>
+    );
+  }
 
   if (!editing) {
     return (
@@ -183,6 +214,7 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
         cell: ({ row, getValue }) => (
           <ReservationDateCell
             value={getValue()}
+            isAdmin={isAdmin}
             onSave={(date) => onUpdate(row.original.id, 'reservation_date', date)}
           />
         ),

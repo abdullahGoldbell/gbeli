@@ -15,6 +15,13 @@ export async function GET(req: NextRequest) {
 
     const isAdmin = req.headers.get('x-user-is-admin') === 'true';
 
+    // Auto-clear stale reservations (older than 2 days)
+    await pool.request().query(
+      `UPDATE fleet SET reservation_date = NULL, reserved_by = NULL, updated_at = GETDATE()
+       WHERE reservation_date IS NOT NULL
+         AND DATEDIFF(day, reservation_date, CAST(GETDATE() AS DATE)) > 2`,
+    );
+
     let query = 'SELECT * FROM fleet WHERE 1=1';
     const request = pool.request();
 
