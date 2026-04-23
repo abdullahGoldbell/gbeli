@@ -19,7 +19,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       'yor', 'yom', 'battery', 'lta_reg', 'customer_name',
       'repair_cost', 'condition', 'remarks', 'customer_requirements',
       'location', 'postal_code', 'volts', 'equipment_type', 'serviceable', 'salesman_name', 'updated_by',
-      'release_status', 'reservation_date', 'reserved_by',
+      'release_status', 'reservation_date', 'reserved_by', 'lease_period',
     ];
 
     // Non-admin enforcement: only allow reservation_date
@@ -98,6 +98,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       release_status: sql.VarChar(20),
       reservation_date: sql.Date,
       reserved_by: sql.VarChar(100),
+      lease_period: sql.VarChar(50),
     };
 
     for (const field of allowedFields) {

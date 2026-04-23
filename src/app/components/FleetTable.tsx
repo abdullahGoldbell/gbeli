@@ -118,6 +118,13 @@ function ReservationDateCell({ value, onSave, isAdmin }: { value: string | null;
   );
 }
 const RELEASE_STATUSES = ['Release', 'Hold'];
+const LEASE_PERIODS = [
+  'Long-term(>36 months)',
+  'Long-term(36 months)',
+  'Long-term(24 Months)',
+  'Long-term(12 months)',
+  'Short-term',
+];
 
 export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hiddenColumns, isAdmin }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -236,6 +243,21 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
             </div>
           );
         },
+      }),
+      columnHelper.accessor('lease_period', {
+        header: 'Lease Period',
+        size: 160,
+        minSize: 120,
+        cell: ({ row, getValue }) => (
+          <InlineEdit
+            value={getValue()}
+            field="lease_period"
+            type="select"
+            options={LEASE_PERIODS}
+            readOnly={ro}
+            onSave={(f, v) => onUpdate(row.original.id, f, v)}
+          />
+        ),
       }),
       columnHelper.accessor('customer_name', {
         header: 'Customer',

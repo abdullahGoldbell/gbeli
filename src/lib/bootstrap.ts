@@ -52,6 +52,10 @@ async function doBootstrap(): Promise<void> {
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'reserved_by')
         ALTER TABLE fleet ADD reserved_by VARCHAR(100) NULL
     `);
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'lease_period')
+        ALTER TABLE fleet ADD lease_period VARCHAR(50) NULL
+    `);
   } catch (err) {
     console.warn('Bootstrap DDL failed (tables/columns may already exist):', err);
   }

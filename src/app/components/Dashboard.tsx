@@ -256,7 +256,7 @@ export default function Dashboard() {
 
       {/* Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
-        <StatsCards stats={stats} />
+        {user?.isAdmin && <StatsCards stats={stats} />}
         <Filters
           filters={filters}
           onFilterChange={handleFilterChange}

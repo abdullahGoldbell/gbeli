@@ -98,18 +98,19 @@ export async function POST(req: NextRequest) {
       .input('release_status', sql.VarChar, body.release_status || 'Release')
       .input('reservation_date', sql.Date, body.reservation_date || null)
       .input('reserved_by', sql.VarChar, body.reserved_by || null)
+      .input('lease_period', sql.VarChar, body.lease_period || null)
       .input('updated_by', sql.VarChar, body.updated_by || null)
       .query(`INSERT INTO fleet (fleet_type, category, in_out_date, brand, model, model2, replace_ref,
         veh_no, container_mast, chassis, mast, attachment, yor, yom, battery, lta_reg,
         customer_name, repair_cost, condition, remarks,
         customer_requirements, location, postal_code, volts, equipment_type, serviceable, salesman_name,
-        release_status, reservation_date, reserved_by, updated_by)
+        release_status, reservation_date, reserved_by, lease_period, updated_by)
         OUTPUT INSERTED.*
         VALUES (@fleet_type, @category, @in_out_date, @brand, @model, @model2, @replace_ref,
         @veh_no, @container_mast, @chassis, @mast, @attachment, @yor, @yom, @battery, @lta_reg,
         @customer_name, @repair_cost, @condition, @remarks,
         @customer_requirements, @location, @postal_code, @volts, @equipment_type, @serviceable, @salesman_name,
-        @release_status, @reservation_date, @reserved_by, @updated_by)`);
+        @release_status, @reservation_date, @reserved_by, @lease_period, @updated_by)`);
 
     return NextResponse.json(result.recordset[0], { status: 201 });
   } catch (error) {

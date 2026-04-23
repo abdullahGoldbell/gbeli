@@ -30,6 +30,7 @@ export interface FleetRecord {
   release_status: string | null;
   reservation_date: string | null;
   reserved_by: string | null;
+  lease_period: string | null;
   updated_at: string | null;
   updated_by: string | null;
 }
