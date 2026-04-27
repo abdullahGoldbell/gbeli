@@ -52,6 +52,95 @@ async function doBootstrap(): Promise<void> {
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'reserved_by')
         ALTER TABLE fleet ADD reserved_by VARCHAR(100) NULL
     `);
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'name')
+        ALTER TABLE fleet ADD name VARCHAR(150) NULL
+    `);
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'lease_period')
+        ALTER TABLE fleet ADD lease_period VARCHAR(50) NULL
+    `);
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'supplier')
+        ALTER TABLE fleet ADD supplier VARCHAR(150) NULL
+    `);
+    // OUT vehicles ledger (separate from fleet)
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'out_vehicles')
+      CREATE TABLE out_vehicles (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        out_date DATE NULL,
+        brand VARCHAR(100) NULL,
+        model VARCHAR(150) NULL,
+        name VARCHAR(150) NULL,
+        veh_no VARCHAR(50) NULL,
+        container_mast VARCHAR(100) NULL,
+        chassis VARCHAR(100) NULL,
+        mast VARCHAR(100) NULL,
+        attachment VARCHAR(100) NULL,
+        yor INT NULL,
+        yom INT NULL,
+        customer_name VARCHAR(200) NULL,
+        condition VARCHAR(100) NULL,
+        supplier VARCHAR(150) NULL,
+        remarks NVARCHAR(MAX) NULL,
+        lta_reg VARCHAR(50) NULL,
+        category VARCHAR(50) NULL,
+        updated_at DATETIME NOT NULL DEFAULT GETDATE()
+      )
+    `);
+
+    // SOLD vehicles ledger
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'sold_vehicles')
+      CREATE TABLE sold_vehicles (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        sold_date DATE NULL,
+        brand VARCHAR(100) NULL,
+        model VARCHAR(150) NULL,
+        customer VARCHAR(200) NULL,
+        veh_no VARCHAR(50) NULL,
+        chassis_no VARCHAR(100) NULL,
+        mast VARCHAR(100) NULL,
+        attachment VARCHAR(100) NULL,
+        yor INT NULL,
+        yom INT NULL,
+        lta_reg VARCHAR(50) NULL,
+        salesman VARCHAR(100) NULL,
+        remarks NVARCHAR(MAX) NULL,
+        do_no VARCHAR(50) NULL,
+        updated_at DATETIME NOT NULL DEFAULT GETDATE()
+      )
+    `);
+
+    // Battery price ledger
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'battery_prices')
+      CREATE TABLE battery_prices (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        regen_date DATE NULL,
+        bat_sn VARCHAR(150) NULL,
+        fl VARCHAR(50) NULL,
+        model VARCHAR(150) NULL,
+        supplier VARCHAR(150) NULL,
+        customer VARCHAR(200) NULL,
+        amt DECIMAL(15,2) NULL,
+        supplier_invoice VARCHAR(150) NULL,
+        warranty VARCHAR(50) NULL,
+        volt VARCHAR(50) NULL,
+        ah VARCHAR(50) NULL,
+        socket VARCHAR(50) NULL,
+        updated_at DATETIME NOT NULL DEFAULT GETDATE()
+      )
+    `);
+
+    // Widen narrow VARCHARs that overflow real-world data
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN mast VARCHAR(100) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN attachment VARCHAR(100) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN container_mast VARCHAR(100) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN condition VARCHAR(100) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN customer_name VARCHAR(200) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN remarks NVARCHAR(MAX) NULL`).catch(() => {});
   } catch (err) {
     console.warn('Bootstrap DDL failed (tables/columns may already exist):', err);
   }

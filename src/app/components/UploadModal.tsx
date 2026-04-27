@@ -15,9 +15,10 @@ interface UploadResult {
 interface Props {
   onClose: () => void;
   onSuccess: (result: UploadResult) => void;
+  mode?: 'fleet' | 'sold' | 'battery' | 'out';
 }
 
-export default function UploadModal({ onClose, onSuccess }: Props) {
+export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -63,7 +64,7 @@ export default function UploadModal({ onClose, onSuccess }: Props) {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const res = await fetch(`/api/upload?mode=${mode}`, { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok || !data.success) {
         setError(data.error || 'Upload failed');

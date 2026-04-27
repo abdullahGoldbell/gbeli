@@ -12,6 +12,11 @@ import AddVehicleModal from './AddVehicleModal';
 import UploadModal from './UploadModal';
 import { useAuth } from './AuthProvider';
 import AdminPanel from './AdminPanel';
+import SoldTable from './SoldTable';
+import BatteryTable from './BatteryTable';
+import OutTable from './OutTable';
+
+type ViewTab = 'fleet' | 'out' | 'sold' | 'battery';
 
 interface FilterState {
   fleet_type: string;
@@ -19,6 +24,7 @@ interface FilterState {
   brand: string;
   category: string;
   search: string;
+  release_status: string;
 }
 
 export default function Dashboard() {
@@ -26,7 +32,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState<FleetStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
-    fleet_type: '', condition: '', brand: '', category: '', search: '',
+    fleet_type: '', condition: '', brand: '', category: '', search: '', release_status: '',
   });
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -34,6 +40,7 @@ export default function Dashboard() {
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { user, loading: authLoading, logout } = useAuth();
   const [showAdmin, setShowAdmin] = useState(false);
+  const [view, setView] = useState<ViewTab>('fleet');
   const router = useRouter();
 
   // Redirect to login if not authenticated
@@ -62,6 +69,7 @@ export default function Dashboard() {
       if (active.brand) params.set('brand', active.brand);
       if (active.category) params.set('category', active.category);
       if (active.search) params.set('search', active.search);
+      if (active.release_status) params.set('release_status', active.release_status);
 
       const res = await fetch(`/api/fleet?${params}`);
       const json = await res.json();
@@ -200,6 +208,19 @@ export default function Dashboard() {
   const categories = [...new Set(data.map((r) => r.category).filter(Boolean) as string[])].sort();
   const conditions = [...new Set(data.map((r) => r.condition).filter(Boolean) as string[])].sort();
 
+  const handleStatsCardClick = useCallback((action: { kind: 'filter'; fleet_type?: string; reset?: boolean } | { kind: 'nav'; tab: 'out' | 'sold' | 'battery' }) => {
+    if (action.kind === 'nav') {
+      setView(action.tab);
+      return;
+    }
+    const next: FilterState = action.reset
+      ? { fleet_type: '', condition: '', brand: '', category: '', search: '', release_status: '' }
+      : { fleet_type: '', condition: '', brand: '', category: '', search: '', release_status: '', ...action };
+    setView('fleet');
+    setFilters(next);
+    fetchData(next);
+  }, [fetchData]);
+
   const handleExport = () => {
     const params = new URLSearchParams();
     if (filters.fleet_type) params.set('fleet_type', filters.fleet_type);
@@ -256,25 +277,51 @@ export default function Dashboard() {
 
       {/* Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
-        <StatsCards stats={stats} />
-        <Filters
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          brands={brands}
-          categories={categories}
-          conditions={conditions}
-          onExport={handleExport}
-          onAdd={() => setShowAddModal(true)}
-          onUpload={() => setShowUploadModal(true)}
-          showAdd={!!user?.isAdmin}
-        />
-        {loading ? (
-          <div className="bg-white rounded-lg p-12 text-center text-neutral-400">
-            Loading fleet data...
+        {view === 'fleet' && user?.isAdmin && <StatsCards stats={stats} onCardClick={handleStatsCardClick} />}
+        {user?.isAdmin && (
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setView('fleet')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'fleet' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'}`}
+            >Fleet</button>
+            <button
+              onClick={() => setView('out')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'out' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'}`}
+            >Out</button>
+            <button
+              onClick={() => setView('sold')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'sold' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'}`}
+            >Sold</button>
+            <button
+              onClick={() => setView('battery')}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'battery' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'}`}
+            >Battery Price</button>
           </div>
-        ) : (
-          <FleetTable data={data} onUpdate={handleUpdate} onDelete={handleDelete} updatedRowIds={updatedRowIds} hiddenColumns={user?.hiddenColumns || []} isAdmin={!!user?.isAdmin} />
         )}
+        {view === 'out' && user?.isAdmin && <OutTable />}
+        {view === 'sold' && user?.isAdmin && <SoldTable />}
+        {view === 'battery' && user?.isAdmin && <BatteryTable />}
+        {view === 'fleet' && (<>
+          <Filters
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            brands={brands}
+            categories={categories}
+            conditions={conditions}
+            onExport={handleExport}
+            onAdd={() => setShowAddModal(true)}
+            onUpload={() => setShowUploadModal(true)}
+            showAdd={!!user?.isAdmin}
+            showExport={!!user?.isAdmin}
+          />
+          {loading ? (
+            <div className="bg-white rounded-lg p-12 text-center text-neutral-400">
+              Loading fleet data...
+            </div>
+          ) : (
+            <FleetTable data={data} onUpdate={handleUpdate} onDelete={handleDelete} updatedRowIds={updatedRowIds} hiddenColumns={user?.hiddenColumns || []} isAdmin={!!user?.isAdmin} />
+          )}
+        </>)}
       </main>
 
       {showAddModal && <AddVehicleModal onClose={() => setShowAddModal(false)} onSubmit={handleAdd} />}

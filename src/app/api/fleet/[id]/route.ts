@@ -14,21 +14,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Build dynamic SET clause from provided fields
     const allowedFields = [
-      'fleet_type', 'category', 'in_out_date', 'brand', 'model', 'model2',
-      'replace_ref', 'veh_no', 'container_mast', 'chassis', 'mast', 'attachment',
-      'yor', 'yom', 'battery', 'lta_reg', 'customer_name',
-      'repair_cost', 'condition', 'remarks', 'customer_requirements',
-      'location', 'postal_code', 'volts', 'equipment_type', 'serviceable', 'salesman_name', 'updated_by',
+      'fleet_type', 'category', 'in_out_date', 'brand', 'model', 'name',
+      'veh_no', 'container_mast', 'chassis', 'mast', 'attachment',
+      'yor', 'yom', 'lta_reg', 'customer_name',
+      'condition', 'supplier', 'remarks', 'lease_period', 'updated_by',
       'release_status', 'reservation_date', 'reserved_by',
     ];
 
-    // Non-admin enforcement: only allow reservation_date
+    // Non-admin enforcement: only allow reservation_date and lease_period
     if (!isAdmin) {
+      const nonAdminAllowed = new Set(['reservation_date', 'lease_period', 'updated_by']);
       const requestedFields = allowedFields.filter((f) => f in body);
-      const disallowedFields = requestedFields.filter((f) => f !== 'reservation_date' && f !== 'updated_by');
+      const disallowedFields = requestedFields.filter((f) => !nonAdminAllowed.has(f));
       if (disallowedFields.length > 0) {
         return NextResponse.json(
-          { error: `Sales users can only edit reservation_date. Disallowed: ${disallowedFields.join(', ')}` },
+          { error: `Sales users can only edit reservation_date and lease_period. Disallowed: ${disallowedFields.join(', ')}` },
           { status: 403 },
         );
       }
@@ -48,30 +48,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       fleet_type: sql.VarChar(20),
       category: sql.VarChar(50),
       in_out_date: sql.Date,
-      brand: sql.VarChar(50),
-      model: sql.VarChar(100),
-      model2: sql.VarChar(100),
-      replace_ref: sql.VarChar(50),
-      veh_no: sql.VarChar(20),
-      container_mast: sql.VarChar(50),
-      chassis: sql.VarChar(50),
-      mast: sql.VarChar(20),
-      attachment: sql.VarChar(20),
+      brand: sql.VarChar(100),
+      model: sql.VarChar(150),
+      name: sql.VarChar(150),
+      veh_no: sql.VarChar(50),
+      container_mast: sql.VarChar(100),
+      chassis: sql.VarChar(100),
+      mast: sql.VarChar(100),
+      attachment: sql.VarChar(100),
       yor: sql.Int,
       yom: sql.Int,
-      battery: sql.VarChar(50),
-      lta_reg: sql.VarChar(20),
+      lta_reg: sql.VarChar(50),
       customer_name: sql.VarChar(200),
-      repair_cost: sql.Decimal(10, 2),
-      condition: sql.VarChar(50),
-      remarks: sql.NVarChar(500),
-      customer_requirements: sql.NVarChar(500),
-      location: sql.VarChar(100),
-      postal_code: sql.VarChar(20),
-      volts: sql.VarChar(10),
-      equipment_type: sql.VarChar(50),
-      serviceable: sql.VarChar(50),
-      salesman_name: sql.VarChar(100),
+      condition: sql.VarChar(100),
+      supplier: sql.VarChar(150),
+      lease_period: sql.VarChar(50),
+      remarks: sql.NVarChar(sql.MAX),
       updated_by: sql.VarChar(50),
       release_status: sql.VarChar(20),
       reservation_date: sql.Date,

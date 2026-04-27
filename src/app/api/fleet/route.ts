@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
     const brand = searchParams.get('brand');
     const category = searchParams.get('category');
+    const status = searchParams.get('release_status');
 
     const isAdmin = req.headers.get('x-user-is-admin') === 'true';
 
@@ -21,6 +22,9 @@ export async function GET(req: NextRequest) {
     // Non-admin users can only see Release vehicles
     if (!isAdmin) {
       query += " AND release_status = 'Release'";
+    } else if (status) {
+      query += ' AND release_status = @status';
+      request.input('status', sql.VarChar, status);
     }
 
     if (fleetType) {
