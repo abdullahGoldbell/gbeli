@@ -57,6 +57,14 @@ async function doBootstrap(): Promise<void> {
         ALTER TABLE fleet ADD lease_period VARCHAR(50) NULL
     `);
 
+    // Widen narrow VARCHAR columns that overflow on real-world data (OUT sheet etc.)
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN mast VARCHAR(100) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN attachment VARCHAR(100) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN container_mast VARCHAR(100) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN volts VARCHAR(50) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN lta_reg VARCHAR(50) NULL`).catch(() => {});
+    await pool.request().query(`ALTER TABLE fleet ALTER COLUMN condition VARCHAR(100) NULL`).catch(() => {});
+
     // SOLD vehicles ledger
     await pool.request().query(`
       IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'sold_vehicles')

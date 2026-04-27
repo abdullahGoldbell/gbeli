@@ -154,7 +154,8 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
                     <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded font-medium">OUT</span>
                   </div>
                   <p className="mt-1 text-blue-600">Rows in <strong>OUT</strong> sheet marked status=OUT (not visible to Sales).</p>
-                  <p className="mt-2 text-blue-600">Existing vehicles (by Veh No) updated. New ones inserted. SOLD/BATT PRICE sheets ignored — use dedicated tabs.</p>
+                  <p className="mt-1 text-red-600 font-medium">Fleet table will be fully replaced (TRUNCATE + reload). All reservations, lease periods, and manual edits in DB will be lost.</p>
+                  <p className="mt-1 text-blue-600">SOLD/BATT PRICE sheets ignored — use dedicated tabs.</p>
                 </>)}
                 {mode === 'sold' && (<>
                   <p className="font-medium mb-1">Sold Vehicles upload</p>

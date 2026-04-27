@@ -319,6 +319,56 @@ async function replaceBattery(pool: Awaited<ReturnType<typeof getPool>>, rows: B
   return count;
 }
 
+async function bulkInsertFleet(pool: Awaited<ReturnType<typeof getPool>>, vehicles: ParsedVehicle[], updatedBy: string, releaseStatus: string = 'Release'): Promise<number> {
+  let count = 0;
+  for (let i = 0; i < vehicles.length; i += 100) {
+    const batch = vehicles.slice(i, i + 100);
+    const tx = new sql.Transaction(pool);
+    await tx.begin();
+    try {
+      for (const v of batch) {
+        await new sql.Request(tx)
+          .input('fleet_type', sql.VarChar, v.fleet_type)
+          .input('category', sql.VarChar, v.category)
+          .input('in_out_date', sql.Date, v.in_out_date)
+          .input('brand', sql.VarChar, v.brand)
+          .input('model', sql.VarChar, v.model)
+          .input('model2', sql.VarChar, v.model2)
+          .input('veh_no', sql.VarChar, v.veh_no)
+          .input('container_mast', sql.VarChar, v.container_mast)
+          .input('chassis', sql.VarChar, v.chassis)
+          .input('mast', sql.VarChar, v.mast)
+          .input('attachment', sql.VarChar, v.attachment)
+          .input('yor', sql.Int, v.yor)
+          .input('yom', sql.Int, v.yom)
+          .input('customer_name', sql.VarChar, v.customer_name)
+          .input('condition', sql.VarChar, v.condition)
+          .input('remarks', sql.NVarChar, v.remarks)
+          .input('lta_reg', sql.VarChar, v.lta_reg)
+          .input('reservation_date', sql.Date, v.reservation_date)
+          .input('reserved_by', sql.VarChar, v.reserved_by)
+          .input('updated_by', sql.VarChar, updatedBy)
+          .input('release_status', sql.VarChar, releaseStatus)
+          .query(`INSERT INTO fleet (fleet_type, category, in_out_date, brand, model, model2,
+                  veh_no, container_mast, chassis, mast, attachment, yor, yom,
+                  customer_name, condition, remarks, lta_reg,
+                  reservation_date, reserved_by, updated_by, release_status, updated_at)
+                  VALUES (@fleet_type, @category, @in_out_date, @brand, @model, @model2,
+                  @veh_no, @container_mast, @chassis, @mast, @attachment, @yor, @yom,
+                  @customer_name, @condition, @remarks, @lta_reg,
+                  @reservation_date, @reserved_by, @updated_by, @release_status, GETDATE())`);
+        count++;
+      }
+      await tx.commit();
+    } catch (e) {
+      try { await tx.rollback(); } catch { /* already rolled back */ }
+      console.error('Fleet insert batch error:', e);
+      throw e;
+    }
+  }
+  return count;
+}
+
 async function upsertVehicles(pool: Awaited<ReturnType<typeof getPool>>, vehicles: ParsedVehicle[], updatedBy: string, releaseStatus: string | null = null): Promise<{ inserted: number; updated: number }> {
   let inserted = 0;
   let updated = 0;
@@ -465,22 +515,21 @@ export async function POST(req: NextRequest) {
     const pool = await getPool();
 
     let totalInserted = 0;
-    let totalUpdated = 0;
+    const totalUpdated = 0;
+
+    // Fleet mode = full replace: TRUNCATE then bulk insert (overwrites reservations/edits)
+    if (mode === 'fleet' && (dieselVehicles.length > 0 || electricVehicles.length > 0 || outVehicles.length > 0)) {
+      await pool.request().query('TRUNCATE TABLE fleet');
+    }
 
     if (dieselVehicles.length > 0) {
-      const r = await upsertVehicles(pool, dieselVehicles, username);
-      totalInserted += r.inserted;
-      totalUpdated += r.updated;
+      totalInserted += await bulkInsertFleet(pool, dieselVehicles, username, 'Release');
     }
     if (electricVehicles.length > 0) {
-      const r = await upsertVehicles(pool, electricVehicles, username);
-      totalInserted += r.inserted;
-      totalUpdated += r.updated;
+      totalInserted += await bulkInsertFleet(pool, electricVehicles, username, 'Release');
     }
     if (outVehicles.length > 0) {
-      const r = await upsertVehicles(pool, outVehicles, username, 'OUT');
-      totalInserted += r.inserted;
-      totalUpdated += r.updated;
+      totalInserted += await bulkInsertFleet(pool, outVehicles, username, 'OUT');
     }
 
     let soldCount = 0;
