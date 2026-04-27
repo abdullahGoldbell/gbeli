@@ -7,7 +7,6 @@ interface UploadResult {
   filename: string;
   diesel: number;
   electric: number;
-  out?: number;
   total: number;
   inserted: number;
   updated: number;
@@ -16,10 +15,9 @@ interface UploadResult {
 interface Props {
   onClose: () => void;
   onSuccess: (result: UploadResult) => void;
-  mode?: 'fleet' | 'sold' | 'battery';
 }
 
-export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Props) {
+export default function UploadModal({ onClose, onSuccess }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -65,7 +63,7 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch(`/api/upload?mode=${mode}`, { method: 'POST', body: formData });
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok || !data.success) {
         setError(data.error || 'Upload failed');
@@ -89,12 +87,8 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 bg-neutral-50">
           <div>
-            <h2 className="text-lg font-bold text-neutral-900">
-              {mode === 'sold' ? 'Upload Sold Excel' : mode === 'battery' ? 'Upload Battery Price Excel' : 'Upload FMS Excel'}
-            </h2>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              {mode === 'sold' ? 'Replace sold vehicle records' : mode === 'battery' ? 'Replace battery price records' : 'Import or update fleet data from spreadsheet'}
-            </p>
+            <h2 className="text-lg font-bold text-neutral-900">Upload FMS Excel</h2>
+            <p className="text-xs text-neutral-500 mt-0.5">Import or update fleet data from spreadsheet</p>
           </div>
           <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600 text-xl leading-none">&times;</button>
         </div>
@@ -146,27 +140,12 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
 
               {/* Info */}
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 text-xs text-blue-700">
-                {mode === 'fleet' && (<>
-                  <p className="font-medium mb-1">Supported sheet names:</p>
-                  <div className="flex gap-2 flex-wrap">
-                    <span className="bg-blue-100 px-2 py-0.5 rounded font-medium">DIESEL</span>
-                    <span className="bg-blue-100 px-2 py-0.5 rounded font-medium">ELECTRIC</span>
-                    <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded font-medium">OUT</span>
-                  </div>
-                  <p className="mt-1 text-blue-600">Rows in <strong>OUT</strong> sheet marked status=OUT (not visible to Sales).</p>
-                  <p className="mt-1 text-red-600 font-medium">Fleet table will be fully replaced (TRUNCATE + reload). All reservations, lease periods, and manual edits in DB will be lost.</p>
-                  <p className="mt-1 text-blue-600">SOLD/BATT PRICE sheets ignored — use dedicated tabs.</p>
-                </>)}
-                {mode === 'sold' && (<>
-                  <p className="font-medium mb-1">Sold Vehicles upload</p>
-                  <p>Reads <strong>SOLD</strong> sheet (or first sheet if not named). Headers row 4: Sold Date, Brand, Model, Customer, Veh No, _, Chassis No., Mast, Att, YOR, YOM, LTA Reg, Salesman, Remarks, DO No.</p>
-                  <p className="mt-1 text-red-600 font-medium">Sold table will be replaced (TRUNCATE + reload).</p>
-                </>)}
-                {mode === 'battery' && (<>
-                  <p className="font-medium mb-1">Battery Prices upload</p>
-                  <p>Reads <strong>BATT PRICE</strong> sheet (or first sheet if not named). Headers row 1: REGENARED, BAT S/N, FL, MODEL, SUPPLIER, CUSTOMER, AMT, SUPPLIER INVOICE, WARRANTY, VOLT, AH, SOCKET.</p>
-                  <p className="mt-1 text-red-600 font-medium">Battery table will be replaced (TRUNCATE + reload).</p>
-                </>)}
+                <p className="font-medium mb-1">Supported sheet names:</p>
+                <div className="flex gap-2">
+                  <span className="bg-blue-100 px-2 py-0.5 rounded font-medium">DIESEL</span>
+                  <span className="bg-blue-100 px-2 py-0.5 rounded font-medium">ELECTRIC</span>
+                </div>
+                <p className="mt-2 text-blue-600">Existing vehicles (by Veh No) will be updated. New vehicles will be added.</p>
               </div>
 
               {error && (

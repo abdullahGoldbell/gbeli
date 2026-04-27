@@ -22,20 +22,11 @@ interface Props {
   updatedRowIds: Set<number>;
   hiddenColumns: string[];
   isAdmin: boolean;
-  currentUserName?: string;
 }
 
 const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'];
 
-function todayISO(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function ReservationDateCell({ value, onSave, isAdmin, reservedBy, currentUserName }: { value: string | null; onSave: (date: string | null) => void; isAdmin: boolean; reservedBy?: string | null; currentUserName?: string }) {
+function ReservationDateCell({ value, onSave }: { value: string | null; onSave: (date: string | null) => void }) {
   const formatted = value && value.includes('T') ? value.split('T')[0] : (value || '');
   const [editing, setEditing] = useState(false);
   const [dateVal, setDateVal] = useState(formatted);
@@ -56,41 +47,6 @@ function ReservationDateCell({ value, onSave, isAdmin, reservedBy, currentUserNa
     setEditing(false);
     setDateVal(formatted);
   }, [formatted]);
-
-  // Non-admin: no date picker. Reserve button sets today; clear allowed only by owner.
-  if (!isAdmin) {
-    if (formatted) {
-      const isOwner = !!currentUserName && !!reservedBy && reservedBy.toLowerCase() === currentUserName.toLowerCase();
-      return (
-        <div className="flex items-center gap-1">
-          <span
-            className="px-1 py-0.5 truncate text-neutral-700"
-            title={`Reserved on ${formatted} (auto-clears after 3 days)`}
-          >
-            {formatted}
-          </span>
-          {isOwner && (
-            <button
-              onClick={() => onSave(null)}
-              className="px-1.5 py-0.5 bg-neutral-200 text-neutral-700 text-xs rounded hover:bg-neutral-300"
-              title="Clear my reservation"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      );
-    }
-    return (
-      <button
-        onClick={() => onSave(todayISO())}
-        className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-        title="Reserve today"
-      >
-        Reserve
-      </button>
-    );
-  }
 
   if (!editing) {
     return (
@@ -130,16 +86,9 @@ function ReservationDateCell({ value, onSave, isAdmin, reservedBy, currentUserNa
     </div>
   );
 }
-const RELEASE_STATUSES = ['Release', 'Hold', 'OUT'];
-const LEASE_PERIODS = [
-  'Long-term(>36 months)',
-  'Long-term(36 months)',
-  'Long-term(24 Months)',
-  'Long-term(12 months)',
-  'Short-term',
-];
+const RELEASE_STATUSES = ['Release', 'Hold'];
 
-export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hiddenColumns, isAdmin, currentUserName }: Props) {
+export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hiddenColumns, isAdmin }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
 
@@ -234,9 +183,6 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
         cell: ({ row, getValue }) => (
           <ReservationDateCell
             value={getValue()}
-            isAdmin={isAdmin}
-            reservedBy={row.original.reserved_by}
-            currentUserName={currentUserName}
             onSave={(date) => onUpdate(row.original.id, 'reservation_date', date)}
           />
         ),
@@ -258,21 +204,6 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
             </div>
           );
         },
-      }),
-      columnHelper.accessor('lease_period', {
-        header: 'Lease Period',
-        size: 160,
-        minSize: 120,
-        cell: ({ row, getValue }) => (
-          <InlineEdit
-            value={getValue()}
-            field="lease_period"
-            type="select"
-            options={LEASE_PERIODS}
-            readOnly={false}
-            onSave={(f, v) => onUpdate(row.original.id, f, v)}
-          />
-        ),
       }),
       columnHelper.accessor('customer_name', {
         header: 'Customer',
@@ -383,7 +314,7 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
     }
 
     return cols;
-  }, [columnHelper, onUpdate, onDelete, isAdmin, currentUserName]);
+  }, [columnHelper, onUpdate, onDelete, isAdmin]);
 
   const visibleColumns = useMemo(() => {
     return columns.filter((col) => {

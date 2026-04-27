@@ -12,29 +12,15 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
     const brand = searchParams.get('brand');
     const category = searchParams.get('category');
-    const status = searchParams.get('release_status');
 
     const isAdmin = req.headers.get('x-user-is-admin') === 'true';
-
-    // Auto-clear stale reservations (3+ days old)
-    await pool.request().query(
-      `UPDATE fleet SET reservation_date = NULL, reserved_by = NULL, updated_at = GETDATE()
-       WHERE reservation_date IS NOT NULL
-         AND DATEDIFF(day, reservation_date, CAST(GETDATE() AS DATE)) >= 3`,
-    );
 
     let query = 'SELECT * FROM fleet WHERE 1=1';
     const request = pool.request();
 
-    // Non-admin users only see Release vehicles (OUT/Hold hidden)
+    // Non-admin users can only see Release vehicles
     if (!isAdmin) {
       query += " AND release_status = 'Release'";
-    } else if (status) {
-      query += ' AND release_status = @status';
-      request.input('status', sql.VarChar, status);
-    } else {
-      // Admin default: hide OUT unless explicitly filtered
-      query += " AND (release_status <> 'OUT' OR release_status IS NULL)";
     }
 
     if (fleetType) {
@@ -105,19 +91,18 @@ export async function POST(req: NextRequest) {
       .input('release_status', sql.VarChar, body.release_status || 'Release')
       .input('reservation_date', sql.Date, body.reservation_date || null)
       .input('reserved_by', sql.VarChar, body.reserved_by || null)
-      .input('lease_period', sql.VarChar, body.lease_period || null)
       .input('updated_by', sql.VarChar, body.updated_by || null)
       .query(`INSERT INTO fleet (fleet_type, category, in_out_date, brand, model, model2, replace_ref,
         veh_no, container_mast, chassis, mast, attachment, yor, yom, battery, lta_reg,
         customer_name, repair_cost, condition, remarks,
         customer_requirements, location, postal_code, volts, equipment_type, serviceable, salesman_name,
-        release_status, reservation_date, reserved_by, lease_period, updated_by)
+        release_status, reservation_date, reserved_by, updated_by)
         OUTPUT INSERTED.*
         VALUES (@fleet_type, @category, @in_out_date, @brand, @model, @model2, @replace_ref,
         @veh_no, @container_mast, @chassis, @mast, @attachment, @yor, @yom, @battery, @lta_reg,
         @customer_name, @repair_cost, @condition, @remarks,
         @customer_requirements, @location, @postal_code, @volts, @equipment_type, @serviceable, @salesman_name,
-        @release_status, @reservation_date, @reserved_by, @lease_period, @updated_by)`);
+        @release_status, @reservation_date, @reserved_by, @updated_by)`);
 
     return NextResponse.json(result.recordset[0], { status: 201 });
   } catch (error) {

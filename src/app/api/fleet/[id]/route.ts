@@ -19,56 +19,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       'yor', 'yom', 'battery', 'lta_reg', 'customer_name',
       'repair_cost', 'condition', 'remarks', 'customer_requirements',
       'location', 'postal_code', 'volts', 'equipment_type', 'serviceable', 'salesman_name', 'updated_by',
-      'release_status', 'reservation_date', 'reserved_by', 'lease_period',
+      'release_status', 'reservation_date', 'reserved_by',
     ];
 
-    // Non-admin enforcement: only allow reservation_date and lease_period
+    // Non-admin enforcement: only allow reservation_date
     if (!isAdmin) {
-      const nonAdminAllowed = new Set(['reservation_date', 'lease_period', 'updated_by']);
       const requestedFields = allowedFields.filter((f) => f in body);
-      const disallowedFields = requestedFields.filter((f) => !nonAdminAllowed.has(f));
+      const disallowedFields = requestedFields.filter((f) => f !== 'reservation_date' && f !== 'updated_by');
       if (disallowedFields.length > 0) {
         return NextResponse.json(
-          { error: `Sales users can only edit reservation_date and lease_period. Disallowed: ${disallowedFields.join(', ')}` },
+          { error: `Sales users can only edit reservation_date. Disallowed: ${disallowedFields.join(', ')}` },
           { status: 403 },
         );
       }
 
+      // Auto-populate reserved_by with the sales user's name when setting reservation_date
       if ('reservation_date' in body) {
-        const existing = await pool.request()
-          .input('id', sql.Int, parseInt(id))
-          .query('SELECT reservation_date, reserved_by FROM fleet WHERE id = @id');
-        const currentDate = existing.recordset[0]?.reservation_date;
-        const currentBy = existing.recordset[0]?.reserved_by;
-
-        const isClearing = body.reservation_date === null || body.reservation_date === '';
-
-        if (currentDate && !isClearing) {
-          return NextResponse.json(
-            { error: 'Vehicle already reserved. Cannot overwrite existing reservation.' },
-            { status: 403 },
-          );
-        }
-
-        if (isClearing) {
-          // Sales can only clear their own reservation
-          if (currentDate && currentBy && currentBy.toLowerCase() !== userName.toLowerCase()) {
-            return NextResponse.json(
-              { error: `Only ${currentBy} or an admin can clear this reservation.` },
-              { status: 403 },
-            );
-          }
-          body.reservation_date = null;
-          body.reserved_by = null;
-        } else if (body.reservation_date) {
-          // Force reservation_date = today (server authoritative)
-          const now = new Date();
-          const y = now.getFullYear();
-          const m = String(now.getMonth() + 1).padStart(2, '0');
-          const d = String(now.getDate()).padStart(2, '0');
-          body.reservation_date = `${y}-${m}-${d}`;
-          body.reserved_by = userName;
-        }
+        body.reserved_by = userName;
       }
     }
 
@@ -86,22 +53,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       model2: sql.VarChar(100),
       replace_ref: sql.VarChar(50),
       veh_no: sql.VarChar(20),
-      container_mast: sql.VarChar(100),
+      container_mast: sql.VarChar(50),
       chassis: sql.VarChar(50),
-      mast: sql.VarChar(100),
-      attachment: sql.VarChar(100),
+      mast: sql.VarChar(20),
+      attachment: sql.VarChar(20),
       yor: sql.Int,
       yom: sql.Int,
       battery: sql.VarChar(50),
-      lta_reg: sql.VarChar(50),
+      lta_reg: sql.VarChar(20),
       customer_name: sql.VarChar(200),
       repair_cost: sql.Decimal(10, 2),
-      condition: sql.VarChar(100),
+      condition: sql.VarChar(50),
       remarks: sql.NVarChar(500),
       customer_requirements: sql.NVarChar(500),
       location: sql.VarChar(100),
       postal_code: sql.VarChar(20),
-      volts: sql.VarChar(50),
+      volts: sql.VarChar(10),
       equipment_type: sql.VarChar(50),
       serviceable: sql.VarChar(50),
       salesman_name: sql.VarChar(100),
@@ -109,7 +76,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       release_status: sql.VarChar(20),
       reservation_date: sql.Date,
       reserved_by: sql.VarChar(100),
-      lease_period: sql.VarChar(50),
     };
 
     for (const field of allowedFields) {
