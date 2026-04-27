@@ -88,6 +88,38 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const updated = result.recordset[0];
 
+    // Auto-move to out_vehicles when status set to 'Out'
+    if (body.release_status === 'Out') {
+      try {
+        await pool.request()
+          .input('out_date', sql.Date, updated.in_out_date)
+          .input('brand', sql.VarChar, updated.brand)
+          .input('model', sql.VarChar, updated.model)
+          .input('name', sql.VarChar, updated.name)
+          .input('veh_no', sql.VarChar, updated.veh_no)
+          .input('container_mast', sql.VarChar, updated.container_mast)
+          .input('chassis', sql.VarChar, updated.chassis)
+          .input('mast', sql.VarChar, updated.mast)
+          .input('attachment', sql.VarChar, updated.attachment)
+          .input('yor', sql.Int, updated.yor)
+          .input('yom', sql.Int, updated.yom)
+          .input('customer_name', sql.VarChar, updated.customer_name)
+          .input('condition', sql.VarChar, updated.condition)
+          .input('supplier', sql.VarChar, updated.supplier)
+          .input('remarks', sql.NVarChar(sql.MAX), updated.remarks)
+          .input('lta_reg', sql.VarChar, updated.lta_reg)
+          .input('category', sql.VarChar, updated.category)
+          .query(`INSERT INTO out_vehicles (out_date, brand, model, name, veh_no, container_mast, chassis, mast, attachment, yor, yom, customer_name, condition, supplier, remarks, lta_reg, category)
+                  VALUES (@out_date, @brand, @model, @name, @veh_no, @container_mast, @chassis, @mast, @attachment, @yor, @yom, @customer_name, @condition, @supplier, @remarks, @lta_reg, @category)`);
+        await pool.request().input('id', sql.Int, parseInt(id))
+          .query('DELETE FROM fleet WHERE id = @id');
+        return NextResponse.json({ moved: true, id: parseInt(id), veh_no: updated.veh_no });
+      } catch (e) {
+        console.error('Auto-move to out_vehicles failed:', e);
+        return NextResponse.json({ error: 'Failed to move to Out' }, { status: 500 });
+      }
+    }
+
     // Send email notification when reservation is made
     if ('reservation_date' in body && body.reservation_date) {
       sendReservationNotification(

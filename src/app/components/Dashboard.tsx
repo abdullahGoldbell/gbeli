@@ -156,9 +156,14 @@ export default function Dashboard() {
         body: JSON.stringify({ [field]: value }),
       });
       if (!res.ok) throw new Error('Update failed');
-      const updated = await res.json();
-      setData((prev) => prev.map((r) => (r.id === id ? updated : r)));
-      getSocket().emit('fleet:updated', updated);
+      const result = await res.json();
+      if (result.moved) {
+        setData((prev) => prev.filter((r) => r.id !== id));
+        showToast(`${result.veh_no} moved to Out`, 'success');
+      } else {
+        setData((prev) => prev.map((r) => (r.id === id ? result : r)));
+        getSocket().emit('fleet:updated', result);
+      }
       fetchStats();
     } catch (err) {
       console.error('Update failed:', err);

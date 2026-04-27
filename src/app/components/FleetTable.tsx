@@ -25,7 +25,7 @@ interface Props {
 }
 
 const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'];
-const RELEASE_STATUSES = ['Release', 'Hold'];
+const RELEASE_STATUSES = ['Release', 'Hold', 'Out'];
 const LEASE_PERIODS = ['Long Term', 'Short Term'];
 
 function ReservationDateCell({ value, onSave }: { value: string | null; onSave: (date: string | null) => void }) {

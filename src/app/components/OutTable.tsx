@@ -7,7 +7,9 @@ import UploadModal from './UploadModal';
 
 type SortDir = 'asc' | 'desc';
 
-const COLUMNS: { key: keyof OutRecord; label: string; type?: 'text' | 'number' }[] = [
+const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'];
+
+const COLUMNS: { key: keyof OutRecord; label: string; type?: 'text' | 'number' | 'select'; options?: string[] }[] = [
   { key: 'out_date', label: 'Out Date' },
   { key: 'category', label: 'Category' },
   { key: 'brand', label: 'Brand' },
@@ -21,7 +23,7 @@ const COLUMNS: { key: keyof OutRecord; label: string; type?: 'text' | 'number' }
   { key: 'yor', label: 'YOR', type: 'number' },
   { key: 'yom', label: 'YOM', type: 'number' },
   { key: 'customer_name', label: 'Customer' },
-  { key: 'condition', label: 'Condition' },
+  { key: 'condition', label: 'Condition', type: 'select', options: CONDITIONS },
   { key: 'supplier', label: 'Supplier' },
   { key: 'remarks', label: 'Remarks' },
   { key: 'lta_reg', label: 'LTA Reg' },
@@ -158,7 +160,8 @@ export default function OutTable() {
                       <InlineEdit
                         value={display}
                         field={c.key as string}
-                        type={c.type as 'text' | 'number' | undefined}
+                        type={c.type === 'select' ? 'select' : (c.type as 'text' | 'number' | undefined)}
+                        options={c.options}
                         readOnly={false}
                         onSave={(f, val) => handleUpdate(row.id, f, val)}
                       />
