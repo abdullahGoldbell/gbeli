@@ -12,22 +12,29 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search');
     const brand = searchParams.get('brand');
     const category = searchParams.get('category');
+    const status = searchParams.get('release_status');
 
     const isAdmin = req.headers.get('x-user-is-admin') === 'true';
 
-    // Auto-clear stale reservations (older than 2 days)
+    // Auto-clear stale reservations (3+ days old)
     await pool.request().query(
       `UPDATE fleet SET reservation_date = NULL, reserved_by = NULL, updated_at = GETDATE()
        WHERE reservation_date IS NOT NULL
-         AND DATEDIFF(day, reservation_date, CAST(GETDATE() AS DATE)) > 2`,
+         AND DATEDIFF(day, reservation_date, CAST(GETDATE() AS DATE)) >= 3`,
     );
 
     let query = 'SELECT * FROM fleet WHERE 1=1';
     const request = pool.request();
 
-    // Non-admin users can only see Release vehicles
+    // Non-admin users only see Release vehicles (OUT/Hold hidden)
     if (!isAdmin) {
       query += " AND release_status = 'Release'";
+    } else if (status) {
+      query += ' AND release_status = @status';
+      request.input('status', sql.VarChar, status);
+    } else {
+      // Admin default: hide OUT unless explicitly filtered
+      query += " AND (release_status <> 'OUT' OR release_status IS NULL)";
     }
 
     if (fleetType) {

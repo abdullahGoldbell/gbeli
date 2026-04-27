@@ -6,10 +6,10 @@ export async function GET() {
     const pool = await getPool();
     const result = await pool.request().query(`
       SELECT
-        COUNT(*) as total,
-        SUM(CASE WHEN fleet_type = 'ELECTRICAL' THEN 1 ELSE 0 END) as electrical,
-        SUM(CASE WHEN fleet_type = 'DIESEL' THEN 1 ELSE 0 END) as diesel,
-        SUM(CASE WHEN condition = 'REPAIRING' THEN 1 ELSE 0 END) as inRepair,
+        SUM(CASE WHEN release_status <> 'OUT' OR release_status IS NULL THEN 1 ELSE 0 END) as total,
+        SUM(CASE WHEN fleet_type = 'ELECTRICAL' AND (release_status <> 'OUT' OR release_status IS NULL) THEN 1 ELSE 0 END) as electrical,
+        SUM(CASE WHEN fleet_type = 'DIESEL' AND (release_status <> 'OUT' OR release_status IS NULL) THEN 1 ELSE 0 END) as diesel,
+        SUM(CASE WHEN release_status = 'OUT' THEN 1 ELSE 0 END) as [out],
         0 as onRental,
         0 as forSale,
         0 as scrapped

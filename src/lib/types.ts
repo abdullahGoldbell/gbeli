@@ -39,7 +39,7 @@ export interface FleetStats {
   total: number;
   electrical: number;
   diesel: number;
-  inRepair: number;
+  out: number;
   onRental: number;
   forSale: number;
   scrapped: number;
@@ -54,6 +54,40 @@ export interface User {
   is_admin: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface SoldRecord {
+  id: number;
+  sold_date: string | null;
+  brand: string | null;
+  model: string | null;
+  customer: string | null;
+  veh_no: string | null;
+  chassis_no: string | null;
+  mast: string | null;
+  attachment: string | null;
+  yor: number | null;
+  yom: number | null;
+  lta_reg: string | null;
+  salesman: string | null;
+  remarks: string | null;
+  do_no: string | null;
+}
+
+export interface BatteryRecord {
+  id: number;
+  regen_date: string | null;
+  bat_sn: string | null;
+  fl: string | null;
+  model: string | null;
+  supplier: string | null;
+  customer: string | null;
+  amt: number | null;
+  supplier_invoice: string | null;
+  warranty: string | null;
+  volt: string | null;
+  ah: string | null;
+  socket: string | null;
 }
 
 export interface AuthUser {

@@ -8,6 +8,7 @@ interface FilterState {
   brand: string;
   category: string;
   search: string;
+  release_status: string;
 }
 
 interface Props {
@@ -20,9 +21,11 @@ interface Props {
   onAdd: () => void;
   onUpload: () => void;
   showAdd?: boolean;
+  showExport?: boolean;
+  showStatus?: boolean;
 }
 
-export default function Filters({ filters, onFilterChange, brands, categories, conditions, onExport, onAdd, onUpload, showAdd = true }: Props) {
+export default function Filters({ filters, onFilterChange, brands, categories, conditions, onExport, onAdd, onUpload, showAdd = true, showExport = true, showStatus = false }: Props) {
   const update = useCallback((key: keyof FilterState, value: string) => {
     onFilterChange({ ...filters, [key]: value });
   }, [filters, onFilterChange]);
@@ -81,8 +84,21 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
           ))}
         </select>
 
+        {showStatus && (
+          <select
+            value={filters.release_status}
+            onChange={(e) => update('release_status', e.target.value)}
+            className="px-3 py-2 border border-neutral-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Statuses</option>
+            <option value="Release">Release</option>
+            <option value="Hold">Hold</option>
+            <option value="OUT">OUT</option>
+          </select>
+        )}
+
         <button
-          onClick={() => onFilterChange({ fleet_type: '', condition: '', brand: '', category: '', search: '' })}
+          onClick={() => onFilterChange({ fleet_type: '', condition: '', brand: '', category: '', search: '', release_status: '' })}
           className="px-3 py-2 text-sm text-neutral-600 hover:text-neutral-900 border border-neutral-300 rounded-md hover:bg-neutral-50"
         >
           Clear
@@ -107,12 +123,14 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
           </>
         )}
 
-        <button
-          onClick={onExport}
-          className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-md hover:bg-emerald-700 transition-colors"
-        >
-          Export Excel
-        </button>
+        {showExport && (
+          <button
+            onClick={onExport}
+            className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-md hover:bg-emerald-700 transition-colors"
+          >
+            Export Excel
+          </button>
+        )}
       </div>
     </div>
   );

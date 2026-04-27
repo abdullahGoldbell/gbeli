@@ -22,6 +22,7 @@ interface Props {
   updatedRowIds: Set<number>;
   hiddenColumns: string[];
   isAdmin: boolean;
+  currentUserName?: string;
 }
 
 const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'];
@@ -34,7 +35,7 @@ function todayISO(): string {
   return `${y}-${m}-${day}`;
 }
 
-function ReservationDateCell({ value, onSave, isAdmin }: { value: string | null; onSave: (date: string | null) => void; isAdmin: boolean }) {
+function ReservationDateCell({ value, onSave, isAdmin, reservedBy, currentUserName }: { value: string | null; onSave: (date: string | null) => void; isAdmin: boolean; reservedBy?: string | null; currentUserName?: string }) {
   const formatted = value && value.includes('T') ? value.split('T')[0] : (value || '');
   const [editing, setEditing] = useState(false);
   const [dateVal, setDateVal] = useState(formatted);
@@ -56,15 +57,27 @@ function ReservationDateCell({ value, onSave, isAdmin }: { value: string | null;
     setDateVal(formatted);
   }, [formatted]);
 
-  // Non-admin: no date picker. Reserve button sets today; locked once reserved.
+  // Non-admin: no date picker. Reserve button sets today; clear allowed only by owner.
   if (!isAdmin) {
     if (formatted) {
+      const isOwner = !!currentUserName && !!reservedBy && reservedBy.toLowerCase() === currentUserName.toLowerCase();
       return (
-        <div
-          className="min-h-[1.5em] px-1 py-0.5 truncate text-neutral-700"
-          title={`Reserved on ${formatted} (auto-clears after 2 days)`}
-        >
-          {formatted}
+        <div className="flex items-center gap-1">
+          <span
+            className="px-1 py-0.5 truncate text-neutral-700"
+            title={`Reserved on ${formatted} (auto-clears after 3 days)`}
+          >
+            {formatted}
+          </span>
+          {isOwner && (
+            <button
+              onClick={() => onSave(null)}
+              className="px-1.5 py-0.5 bg-neutral-200 text-neutral-700 text-xs rounded hover:bg-neutral-300"
+              title="Clear my reservation"
+            >
+              Clear
+            </button>
+          )}
         </div>
       );
     }
@@ -117,7 +130,7 @@ function ReservationDateCell({ value, onSave, isAdmin }: { value: string | null;
     </div>
   );
 }
-const RELEASE_STATUSES = ['Release', 'Hold'];
+const RELEASE_STATUSES = ['Release', 'Hold', 'OUT'];
 const LEASE_PERIODS = [
   'Long-term(>36 months)',
   'Long-term(36 months)',
@@ -126,7 +139,7 @@ const LEASE_PERIODS = [
   'Short-term',
 ];
 
-export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hiddenColumns, isAdmin }: Props) {
+export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hiddenColumns, isAdmin, currentUserName }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
 
@@ -222,6 +235,8 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
           <ReservationDateCell
             value={getValue()}
             isAdmin={isAdmin}
+            reservedBy={row.original.reserved_by}
+            currentUserName={currentUserName}
             onSave={(date) => onUpdate(row.original.id, 'reservation_date', date)}
           />
         ),
@@ -254,7 +269,7 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
             field="lease_period"
             type="select"
             options={LEASE_PERIODS}
-            readOnly={ro}
+            readOnly={false}
             onSave={(f, v) => onUpdate(row.original.id, f, v)}
           />
         ),
@@ -368,7 +383,7 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
     }
 
     return cols;
-  }, [columnHelper, onUpdate, onDelete, isAdmin]);
+  }, [columnHelper, onUpdate, onDelete, isAdmin, currentUserName]);
 
   const visibleColumns = useMemo(() => {
     return columns.filter((col) => {

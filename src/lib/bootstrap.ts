@@ -56,6 +56,50 @@ async function doBootstrap(): Promise<void> {
       IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('fleet') AND name = 'lease_period')
         ALTER TABLE fleet ADD lease_period VARCHAR(50) NULL
     `);
+
+    // SOLD vehicles ledger
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'sold_vehicles')
+      CREATE TABLE sold_vehicles (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        sold_date DATE NULL,
+        brand VARCHAR(100) NULL,
+        model VARCHAR(150) NULL,
+        customer VARCHAR(200) NULL,
+        veh_no VARCHAR(50) NULL,
+        chassis_no VARCHAR(100) NULL,
+        mast VARCHAR(50) NULL,
+        attachment VARCHAR(50) NULL,
+        yor INT NULL,
+        yom INT NULL,
+        lta_reg VARCHAR(50) NULL,
+        salesman VARCHAR(100) NULL,
+        remarks NVARCHAR(500) NULL,
+        do_no VARCHAR(50) NULL,
+        updated_at DATETIME NOT NULL DEFAULT GETDATE()
+      )
+    `);
+
+    // Battery price ledger
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'battery_prices')
+      CREATE TABLE battery_prices (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        regen_date DATE NULL,
+        bat_sn VARCHAR(100) NULL,
+        fl VARCHAR(50) NULL,
+        model VARCHAR(150) NULL,
+        supplier VARCHAR(150) NULL,
+        customer VARCHAR(200) NULL,
+        amt DECIMAL(10,2) NULL,
+        supplier_invoice VARCHAR(100) NULL,
+        warranty VARCHAR(50) NULL,
+        volt VARCHAR(20) NULL,
+        ah VARCHAR(20) NULL,
+        socket VARCHAR(50) NULL,
+        updated_at DATETIME NOT NULL DEFAULT GETDATE()
+      )
+    `);
   } catch (err) {
     console.warn('Bootstrap DDL failed (tables/columns may already exist):', err);
   }

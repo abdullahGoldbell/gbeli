@@ -5,9 +5,11 @@ import { useState } from 'react';
 interface Props {
   onClose: () => void;
   onSubmit: (data: Record<string, string | number | boolean | null>) => void;
+  modelSuggestions?: string[];
+  brandSuggestions?: string[];
 }
 
-export default function AddVehicleModal({ onClose, onSubmit }: Props) {
+export default function AddVehicleModal({ onClose, onSubmit, modelSuggestions = [], brandSuggestions = [] }: Props) {
   const [form, setForm] = useState({
     fleet_type: 'ELECTRICAL',
     veh_no: '',
@@ -59,13 +61,27 @@ export default function AddVehicleModal({ onClose, onSubmit }: Props) {
             ['brand', 'Brand'], ['model', 'Model'], ['category', 'Category'],
             ['chassis', 'Chassis'], ['mast', 'Mast'], ['yor', 'Year of Reg'],
             ['yom', 'Year of Mfg'], ['customer_name', 'Customer'], ['salesman_name', 'Salesman'], ['location', 'Location'],
-          ].map(([key, label]) => (
-            <div key={key}>
-              <label className="text-xs text-neutral-500 font-medium">{label}</label>
-              <input value={form[key as keyof typeof form]} onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md text-sm" />
-            </div>
-          ))}
+          ].map(([key, label]) => {
+            const listId = key === 'model' ? 'model-suggestions' : key === 'brand' ? 'brand-suggestions' : undefined;
+            return (
+              <div key={key}>
+                <label className="text-xs text-neutral-500 font-medium">{label}</label>
+                <input
+                  value={form[key as keyof typeof form]}
+                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                  list={listId}
+                  autoComplete="off"
+                  className="w-full px-3 py-2 border rounded-md text-sm"
+                />
+              </div>
+            );
+          })}
+          <datalist id="model-suggestions">
+            {modelSuggestions.map((m) => (<option key={m} value={m} />))}
+          </datalist>
+          <datalist id="brand-suggestions">
+            {brandSuggestions.map((b) => (<option key={b} value={b} />))}
+          </datalist>
           <div>
             <label className="text-xs text-neutral-500 font-medium">Condition</label>
             <select value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })}
@@ -79,7 +95,7 @@ export default function AddVehicleModal({ onClose, onSubmit }: Props) {
             <label className="text-xs text-neutral-500 font-medium">Release Status</label>
             <select value={form.release_status} onChange={(e) => setForm({ ...form, release_status: e.target.value })}
               className="w-full px-3 py-2 border rounded-md text-sm">
-              {['Release', 'Hold', 'Reserved'].map((s) => (
+              {['Release', 'Hold', 'OUT'].map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>

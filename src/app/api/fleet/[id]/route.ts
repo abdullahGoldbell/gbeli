@@ -22,42 +22,53 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       'release_status', 'reservation_date', 'reserved_by', 'lease_period',
     ];
 
-    // Non-admin enforcement: only allow reservation_date
+    // Non-admin enforcement: only allow reservation_date and lease_period
     if (!isAdmin) {
+      const nonAdminAllowed = new Set(['reservation_date', 'lease_period', 'updated_by']);
       const requestedFields = allowedFields.filter((f) => f in body);
-      const disallowedFields = requestedFields.filter((f) => f !== 'reservation_date' && f !== 'updated_by');
+      const disallowedFields = requestedFields.filter((f) => !nonAdminAllowed.has(f));
       if (disallowedFields.length > 0) {
         return NextResponse.json(
-          { error: `Sales users can only edit reservation_date. Disallowed: ${disallowedFields.join(', ')}` },
+          { error: `Sales users can only edit reservation_date and lease_period. Disallowed: ${disallowedFields.join(', ')}` },
           { status: 403 },
         );
       }
 
       if ('reservation_date' in body) {
-        // Check existing reservation — non-admin cannot overwrite
         const existing = await pool.request()
           .input('id', sql.Int, parseInt(id))
-          .query('SELECT reservation_date FROM fleet WHERE id = @id');
+          .query('SELECT reservation_date, reserved_by FROM fleet WHERE id = @id');
         const currentDate = existing.recordset[0]?.reservation_date;
+        const currentBy = existing.recordset[0]?.reserved_by;
 
-        if (currentDate) {
+        const isClearing = body.reservation_date === null || body.reservation_date === '';
+
+        if (currentDate && !isClearing) {
           return NextResponse.json(
-            { error: 'Vehicle already reserved. Cannot overwrite or clear existing reservation.' },
+            { error: 'Vehicle already reserved. Cannot overwrite existing reservation.' },
             { status: 403 },
           );
         }
 
-        // Force reservation_date = today (server authoritative)
-        if (body.reservation_date) {
+        if (isClearing) {
+          // Sales can only clear their own reservation
+          if (currentDate && currentBy && currentBy.toLowerCase() !== userName.toLowerCase()) {
+            return NextResponse.json(
+              { error: `Only ${currentBy} or an admin can clear this reservation.` },
+              { status: 403 },
+            );
+          }
+          body.reservation_date = null;
+          body.reserved_by = null;
+        } else if (body.reservation_date) {
+          // Force reservation_date = today (server authoritative)
           const now = new Date();
           const y = now.getFullYear();
           const m = String(now.getMonth() + 1).padStart(2, '0');
           const d = String(now.getDate()).padStart(2, '0');
           body.reservation_date = `${y}-${m}-${d}`;
+          body.reserved_by = userName;
         }
-
-        // Auto-populate reserved_by with the sales user's name
-        body.reserved_by = userName;
       }
     }
 
