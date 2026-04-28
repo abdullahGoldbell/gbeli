@@ -28,7 +28,15 @@ const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYM
 const RELEASE_STATUSES = ['Release', 'Hold', 'Out'];
 const LEASE_PERIODS = ['Long Term', 'Short Term'];
 
-function ReservationDateCell({ value, onSave }: { value: string | null; onSave: (date: string | null) => void }) {
+function todayISO(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function ReservationDateCell({ value, onSave, isAdmin }: { value: string | null; onSave: (date: string | null) => void; isAdmin: boolean }) {
   const formatted = value && value.includes('T') ? value.split('T')[0] : (value || '');
   const [editing, setEditing] = useState(false);
   const [dateVal, setDateVal] = useState(formatted);
@@ -40,6 +48,28 @@ function ReservationDateCell({ value, onSave }: { value: string | null; onSave: 
   }, [dateVal, formatted, onSave]);
   const handleCancel = useCallback(() => { setEditing(false); setDateVal(formatted); }, [formatted]);
 
+  // Non-admin: reserved cell is read-only; empty cell click reserves today
+  if (!isAdmin) {
+    if (formatted) {
+      return (
+        <div className="min-h-[1.5em] px-1 py-0.5 truncate text-neutral-700" title="Reserved — contact admin to modify">
+          {formatted}
+        </div>
+      );
+    }
+    const handleReserveToday = () => {
+      if (confirm('Reserve this vehicle for today? You will not be able to modify it after.')) {
+        onSave(todayISO());
+      }
+    };
+    return (
+      <div onClick={handleReserveToday} className="cursor-pointer min-h-[1.5em] px-1 py-0.5 rounded hover:bg-blue-50 text-blue-600" title="Click to reserve today">
+        Reserve today
+      </div>
+    );
+  }
+
+  // Admin: free date picker
   if (!editing) {
     return (
       <div onClick={handleOpen} className="cursor-pointer min-h-[1.5em] px-1 py-0.5 rounded hover:bg-blue-50 truncate" title={formatted || 'Click to set date'}>
@@ -186,7 +216,7 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
       columnHelper.accessor('reservation_date', {
         header: 'Reservation', size: 200, minSize: 150,
         cell: ({ row, getValue }) => (
-          <ReservationDateCell value={getValue()} onSave={(date) => onUpdate(row.original.id, 'reservation_date', date)} />
+          <ReservationDateCell value={getValue()} isAdmin={isAdmin} onSave={(date) => onUpdate(row.original.id, 'reservation_date', date)} />
         ),
       }),
       columnHelper.accessor('reserved_by', {
