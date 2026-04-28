@@ -22,9 +22,10 @@ interface Props {
   onUpload: () => void;
   showAdd?: boolean;
   showExport?: boolean;
+  showStatusFilter?: boolean;
 }
 
-export default function Filters({ filters, onFilterChange, brands, categories, conditions, onExport, onAdd, onUpload, showAdd = true, showExport = true }: Props) {
+export default function Filters({ filters, onFilterChange, brands, categories, conditions, onExport, onAdd, onUpload, showAdd = true, showExport = true, showStatusFilter = true }: Props) {
   const update = useCallback((key: keyof FilterState, value: string) => {
     onFilterChange({ ...filters, [key]: value });
   }, [filters, onFilterChange]);
@@ -83,15 +84,17 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
           ))}
         </select>
 
-        <select
-          value={filters.release_status}
-          onChange={(e) => update('release_status', e.target.value)}
-          className="px-3 py-2 border border-neutral-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All Statuses</option>
-          <option value="Release">Release</option>
-          <option value="Hold">Hold</option>
-        </select>
+        {showStatusFilter && (
+          <select
+            value={filters.release_status}
+            onChange={(e) => update('release_status', e.target.value)}
+            className="px-3 py-2 border border-neutral-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Statuses</option>
+            <option value="Release">Release</option>
+            <option value="Hold">Hold</option>
+          </select>
+        )}
 
         <button
           onClick={() => onFilterChange({ fleet_type: '', condition: '', brand: '', category: '', search: '', release_status: '' })}

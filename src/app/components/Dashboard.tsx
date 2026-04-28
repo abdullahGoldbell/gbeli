@@ -318,6 +318,7 @@ export default function Dashboard() {
             onUpload={() => setShowUploadModal(true)}
             showAdd={!!user?.isAdmin}
             showExport={!!user?.isAdmin}
+            showStatusFilter={!!user?.isAdmin}
           />
           {loading ? (
             <div className="bg-white rounded-lg p-12 text-center text-neutral-400">
