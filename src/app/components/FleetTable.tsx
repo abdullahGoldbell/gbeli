@@ -19,13 +19,14 @@ interface Props {
   data: FleetRecord[];
   onUpdate: (id: number, field: string, value: string | number | boolean | null) => void;
   onDelete: (id: number, vehNo: string) => void;
+  onStatusMove?: (row: FleetRecord, status: 'Out' | 'Sold') => void;
   updatedRowIds: Set<number>;
   hiddenColumns: string[];
   isAdmin: boolean;
 }
 
 const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'];
-const RELEASE_STATUSES = ['Release', 'Hold', 'Out'];
+const RELEASE_STATUSES = ['Release', 'Hold', 'Out', 'Sold'];
 const LEASE_PERIODS = ['Long Term', 'Short Term'];
 
 function todayISO(): string {
@@ -86,7 +87,7 @@ function ReservationDateCell({ value, onSave, isAdmin }: { value: string | null;
   );
 }
 
-export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hiddenColumns, isAdmin }: Props) {
+export default function FleetTable({ data, onUpdate, onDelete, onStatusMove, updatedRowIds, hiddenColumns, isAdmin }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
   const columnHelper = createColumnHelper<FleetRecord>();
@@ -213,9 +214,31 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
       }),
       columnHelper.accessor('release_status', {
         header: 'Status', size: 90, minSize: 70,
-        cell: ({ row, getValue }) => (
-          <InlineEdit value={getValue()} field="release_status" type="select" options={RELEASE_STATUSES} readOnly={ro} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
-        ),
+        cell: ({ row, getValue }) => {
+          if (ro) {
+            return <div className="text-neutral-600">{getValue() || <span className="text-neutral-300">-</span>}</div>;
+          }
+          const current = (getValue() as string) || '';
+          return (
+            <select
+              value={current}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === 'Out' || v === 'Sold') {
+                  if (onStatusMove) onStatusMove(row.original, v as 'Out' | 'Sold');
+                } else {
+                  onUpdate(row.original.id, 'release_status', v || null);
+                }
+              }}
+              className="w-full px-1 py-0.5 text-sm border border-transparent hover:border-blue-300 focus:border-blue-400 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="">-</option>
+              {RELEASE_STATUSES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          );
+        },
       }),
       columnHelper.accessor('reservation_date', {
         header: 'Reservation', size: 200, minSize: 150,
@@ -259,7 +282,7 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
     }
 
     return cols;
-  }, [columnHelper, onUpdate, onDelete, isAdmin]);
+  }, [columnHelper, onUpdate, onDelete, onStatusMove, isAdmin]);
 
   const visibleColumns = useMemo(() => {
     return columns.filter((col) => {

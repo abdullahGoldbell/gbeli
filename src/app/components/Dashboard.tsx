@@ -9,6 +9,7 @@ import Filters from './Filters';
 import FleetTable from './FleetTable';
 import Notifications, { showToast } from './Notifications';
 import AddVehicleModal from './AddVehicleModal';
+import MoveVehicleModal, { MoveField } from './MoveVehicleModal';
 import UploadModal from './UploadModal';
 import { useAuth } from './AuthProvider';
 import AdminPanel from './AdminPanel';
@@ -36,6 +37,11 @@ export default function Dashboard() {
   });
   const [showAddModal, setShowAddModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [moveModal, setMoveModal] = useState<{
+    title: string;
+    fields: MoveField[];
+    submit: (values: Record<string, string>) => Promise<void>;
+  } | null>(null);
   const [updatedRowIds, setUpdatedRowIds] = useState<Set<number>>(new Set());
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { user, loading: authLoading, logout } = useAuth();
@@ -159,7 +165,8 @@ export default function Dashboard() {
       const result = await res.json();
       if (result.moved) {
         setData((prev) => prev.filter((r) => r.id !== id));
-        showToast(`${result.veh_no} moved to Out`, 'success');
+        const dest = result.to === 'sold' ? 'Sold' : 'Out';
+        showToast(`${result.veh_no} moved to ${dest}`, 'success');
       } else {
         setData((prev) => prev.map((r) => (r.id === id ? result : r)));
         getSocket().emit('fleet:updated', result);
@@ -170,6 +177,64 @@ export default function Dashboard() {
       showToast('Failed to save change', 'warning');
     }
   }, [fetchStats]);
+
+  // Status-move handler: PUT fleet row with extra fields, expect { moved: true }
+  const submitMove = useCallback(async (id: number, body: Record<string, string | null>) => {
+    const res = await fetch(`/api/fleet/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      throw new Error(j.error || 'Move failed');
+    }
+    const result = await res.json();
+    if (result.moved) {
+      setData((prev) => prev.filter((r) => r.id !== id));
+      const dest = result.to === 'sold' ? 'Sold' : 'Out';
+      showToast(`${result.veh_no} moved to ${dest}`, 'success');
+    } else {
+      setData((prev) => prev.map((r) => (r.id === id ? result : r)));
+    }
+    fetchStats();
+  }, [fetchStats]);
+
+  const handleStatusMove = useCallback((row: FleetRecord, status: 'Out' | 'Sold') => {
+    if (status === 'Out') {
+      setMoveModal({
+        title: `Move ${row.veh_no} to Out`,
+        fields: [
+          { key: 'out_date', label: 'Out Date', type: 'date', required: true },
+          { key: 'customer_name', label: 'Customer', type: 'text', defaultValue: row.customer_name || '' },
+          { key: 'location', label: 'Location', type: 'text' },
+        ],
+        submit: async (values) => {
+          await submitMove(row.id, {
+            release_status: 'Out',
+            out_date: values.out_date || null,
+            customer_name: values.customer_name || null,
+            location: values.location || null,
+          });
+          setMoveModal(null);
+        },
+      });
+    } else {
+      setMoveModal({
+        title: `Move ${row.veh_no} to Sold`,
+        fields: [
+          { key: 'sold_date', label: 'Sold Date', type: 'date', required: true },
+        ],
+        submit: async (values) => {
+          await submitMove(row.id, {
+            release_status: 'Sold',
+            sold_date: values.sold_date || null,
+          });
+          setMoveModal(null);
+        },
+      });
+    }
+  }, [submitMove]);
 
   // Delete handler
   const handleDelete = useCallback(async (id: number, vehNo: string) => {
@@ -325,12 +390,20 @@ export default function Dashboard() {
               Loading fleet data...
             </div>
           ) : (
-            <FleetTable data={data} onUpdate={handleUpdate} onDelete={handleDelete} updatedRowIds={updatedRowIds} hiddenColumns={user?.hiddenColumns || []} isAdmin={!!user?.isAdmin} />
+            <FleetTable data={data} onUpdate={handleUpdate} onDelete={handleDelete} onStatusMove={handleStatusMove} updatedRowIds={updatedRowIds} hiddenColumns={user?.hiddenColumns || []} isAdmin={!!user?.isAdmin} />
           )}
         </>)}
       </main>
 
       {showAddModal && <AddVehicleModal onClose={() => setShowAddModal(false)} onSubmit={handleAdd} existing={data} />}
+      {moveModal && (
+        <MoveVehicleModal
+          title={moveModal.title}
+          fields={moveModal.fields}
+          onClose={() => setMoveModal(null)}
+          onSubmit={moveModal.submit}
+        />
+      )}
       {showUploadModal && (
         <UploadModal
           onClose={() => setShowUploadModal(false)}

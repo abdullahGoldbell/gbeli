@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { OutRecord } from '@/lib/types';
 import InlineEdit from './InlineEdit';
 import UploadModal from './UploadModal';
+import MoveVehicleModal from './MoveVehicleModal';
+import { getSocket } from '@/lib/socket';
+import { showToast } from './Notifications';
 
 type SortDir = 'asc' | 'desc';
 
@@ -37,6 +40,7 @@ export default function OutTable() {
   const [sortKey, setSortKey] = useState<keyof OutRecord>('out_date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [showUpload, setShowUpload] = useState(false);
+  const [restoreFor, setRestoreFor] = useState<OutRecord | null>(null);
 
   const fetchData = useCallback(() => {
     setLoading(true);
@@ -65,6 +69,29 @@ export default function OutTable() {
     } catch (e) {
       console.error(e);
       alert('Failed to save change');
+    }
+  }, []);
+
+  const handleRestore = useCallback(async (id: number, values: Record<string, string>) => {
+    try {
+      const res = await fetch(`/api/out/${id}/restore`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ in_date: values.in_date, fleet_type: values.fleet_type }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || 'Restore failed');
+      }
+      const result = await res.json();
+      setData((prev) => prev.filter((r) => r.id !== id));
+      setRestoreFor(null);
+      if (result.fleet) getSocket().emit('fleet:created', result.fleet);
+      showToast(`${result.fleet?.veh_no || 'Vehicle'} moved back to Fleet`, 'success');
+    } catch (e) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : 'Restore failed';
+      alert(msg);
     }
   }, []);
 
@@ -132,6 +159,7 @@ export default function OutTable() {
                   </button>
                 </th>
               ))}
+              <th className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap">Status</th>
               <th className="px-2 py-2 w-10" />
             </tr>
             <tr className="bg-neutral-100">
@@ -145,6 +173,7 @@ export default function OutTable() {
                   />
                 </th>
               ))}
+              <th />
               <th />
             </tr>
           </thead>
@@ -168,17 +197,42 @@ export default function OutTable() {
                     </td>
                   );
                 })}
+                <td className="px-2 py-1">
+                  <select
+                    value="Out"
+                    onChange={(e) => {
+                      if (e.target.value === 'In') setRestoreFor(row);
+                    }}
+                    className="w-full px-1 py-0.5 text-sm border border-transparent hover:border-blue-300 focus:border-blue-400 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    title="Set In to move back to Fleet"
+                  >
+                    <option value="Out">Out</option>
+                    <option value="In">In</option>
+                  </select>
+                </td>
                 <td className="px-2 py-1 text-center">
                   <button onClick={() => handleDelete(row.id, row.veh_no)} className="text-red-400 hover:text-red-600 text-sm" title="Delete">✕</button>
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={COLUMNS.length + 1} className="px-4 py-8 text-center text-neutral-400">No matching records</td></tr>
+              <tr><td colSpan={COLUMNS.length + 2} className="px-4 py-8 text-center text-neutral-400">No matching records</td></tr>
             )}
           </tbody>
         </table>
       </div>
+      {restoreFor && (
+        <MoveVehicleModal
+          title={`Move ${restoreFor.veh_no || 'vehicle'} back to Fleet`}
+          submitLabel="Move to Fleet"
+          fields={[
+            { key: 'in_date', label: 'In Date', type: 'date', required: true },
+            { key: 'fleet_type', label: 'Fleet Type', type: 'select', options: ['ELECTRICAL', 'DIESEL'], required: true },
+          ]}
+          onClose={() => setRestoreFor(null)}
+          onSubmit={(values) => handleRestore(restoreFor.id, values)}
+        />
+      )}
     </div>
   );
 }

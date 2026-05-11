@@ -16,7 +16,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const allowedFields = [
       'fleet_type', 'category', 'in_out_date', 'brand', 'model', 'name',
       'veh_no', 'container_mast', 'chassis', 'mast', 'attachment',
-      'yor', 'yom', 'lta_reg', 'customer_name',
+      'yor', 'yom', 'lta_reg', 'customer_name', 'location', 'salesman_name',
       'condition', 'supplier', 'remarks', 'lease_period', 'updated_by',
       'release_status', 'reservation_date', 'reserved_by',
     ];
@@ -78,6 +78,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       yom: sql.Int,
       lta_reg: sql.VarChar(50),
       customer_name: sql.VarChar(200),
+      location: sql.VarChar(200),
+      salesman_name: sql.VarChar(150),
       condition: sql.VarChar(100),
       supplier: sql.VarChar(150),
       lease_period: sql.VarChar(50),
@@ -109,8 +111,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // Auto-move to out_vehicles when status set to 'Out'
     if (body.release_status === 'Out') {
       try {
+        const outDate = body.out_date || updated.in_out_date;
         await pool.request()
-          .input('out_date', sql.Date, updated.in_out_date)
+          .input('out_date', sql.Date, outDate)
           .input('brand', sql.VarChar, updated.brand)
           .input('model', sql.VarChar, updated.model)
           .input('name', sql.VarChar, updated.name)
@@ -131,10 +134,39 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
                   VALUES (@out_date, @brand, @model, @name, @veh_no, @container_mast, @chassis, @mast, @attachment, @yor, @yom, @customer_name, @condition, @supplier, @remarks, @lta_reg, @category)`);
         await pool.request().input('id', sql.Int, parseInt(id))
           .query('DELETE FROM fleet WHERE id = @id');
-        return NextResponse.json({ moved: true, id: parseInt(id), veh_no: updated.veh_no });
+        return NextResponse.json({ moved: true, to: 'out', id: parseInt(id), veh_no: updated.veh_no });
       } catch (e) {
         console.error('Auto-move to out_vehicles failed:', e);
         return NextResponse.json({ error: 'Failed to move to Out' }, { status: 500 });
+      }
+    }
+
+    // Auto-move to sold_vehicles when status set to 'Sold'
+    if (body.release_status === 'Sold') {
+      try {
+        const soldDate = body.sold_date || updated.in_out_date;
+        await pool.request()
+          .input('sold_date', sql.Date, soldDate)
+          .input('brand', sql.VarChar, updated.brand)
+          .input('model', sql.VarChar, updated.model)
+          .input('customer', sql.VarChar, updated.customer_name)
+          .input('veh_no', sql.VarChar, updated.veh_no)
+          .input('chassis_no', sql.VarChar, updated.chassis)
+          .input('mast', sql.VarChar, updated.mast)
+          .input('attachment', sql.VarChar, updated.attachment)
+          .input('yor', sql.Int, updated.yor)
+          .input('yom', sql.Int, updated.yom)
+          .input('lta_reg', sql.VarChar, updated.lta_reg)
+          .input('salesman', sql.VarChar, updated.salesman_name)
+          .input('remarks', sql.NVarChar(sql.MAX), updated.remarks)
+          .query(`INSERT INTO sold_vehicles (sold_date, brand, model, customer, veh_no, chassis_no, mast, attachment, yor, yom, lta_reg, salesman, remarks)
+                  VALUES (@sold_date, @brand, @model, @customer, @veh_no, @chassis_no, @mast, @attachment, @yor, @yom, @lta_reg, @salesman, @remarks)`);
+        await pool.request().input('id', sql.Int, parseInt(id))
+          .query('DELETE FROM fleet WHERE id = @id');
+        return NextResponse.json({ moved: true, to: 'sold', id: parseInt(id), veh_no: updated.veh_no });
+      } catch (e) {
+        console.error('Auto-move to sold_vehicles failed:', e);
+        return NextResponse.json({ error: 'Failed to move to Sold' }, { status: 500 });
       }
     }
 
