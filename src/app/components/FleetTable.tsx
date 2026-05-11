@@ -111,7 +111,11 @@ export default function FleetTable({ data, onUpdate, onDelete, updatedRowIds, hi
       }),
       columnHelper.accessor('in_out_date', {
         header: 'In Date', size: 100, minSize: 80,
-        cell: ({ getValue }) => <span className="text-neutral-700">{inDateCell(getValue())}</span>,
+        cell: ({ row, getValue }) => (
+          isAdmin
+            ? <InlineEdit value={getValue()} field="in_out_date" type="date" readOnly={false} onSave={(f, v) => onUpdate(row.original.id, f, v)} />
+            : <span className="text-neutral-700">{inDateCell(getValue())}</span>
+        ),
       }),
       columnHelper.accessor('brand', {
         header: 'Brand', size: 100, minSize: 60,

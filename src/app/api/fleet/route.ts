@@ -16,13 +16,22 @@ export async function GET(req: NextRequest) {
 
     const isAdmin = req.headers.get('x-user-is-admin') === 'true';
 
-    // Auto-clear reservations older than T+2 days
+    // Auto-clear reservations older than 3 working days (skip Sat/Sun)
     try {
       await pool.request().query(`
+        DECLARE @cutoff DATE = CAST(GETDATE() AS DATE);
+        DECLARE @i INT = 0;
+        WHILE @i < 3
+        BEGIN
+          SET @cutoff = DATEADD(day, -1, @cutoff);
+          -- '19000101' is Monday; modulo: 0=Mon..4=Fri, 5=Sat, 6=Sun
+          IF (DATEDIFF(day, '19000101', @cutoff) % 7) NOT IN (5, 6)
+            SET @i = @i + 1;
+        END
         UPDATE fleet
         SET reservation_date = NULL, reserved_by = NULL, updated_at = GETDATE()
         WHERE reservation_date IS NOT NULL
-          AND reservation_date < DATEADD(day, -2, CAST(GETDATE() AS DATE))
+          AND reservation_date < @cutoff;
       `);
     } catch (e) {
       console.error('Auto-clear stale reservations failed:', e);

@@ -330,7 +330,7 @@ export default function Dashboard() {
         </>)}
       </main>
 
-      {showAddModal && <AddVehicleModal onClose={() => setShowAddModal(false)} onSubmit={handleAdd} />}
+      {showAddModal && <AddVehicleModal onClose={() => setShowAddModal(false)} onSubmit={handleAdd} existing={data} />}
       {showUploadModal && (
         <UploadModal
           onClose={() => setShowUploadModal(false)}

@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { FleetRecord } from '@/lib/types';
 
 interface Props {
   onClose: () => void;
   onSubmit: (data: Record<string, string | number | boolean | null>) => void;
+  existing?: FleetRecord[];
 }
 
-export default function AddVehicleModal({ onClose, onSubmit }: Props) {
+const SUGGEST_FIELDS = [
+  'brand', 'model', 'category', 'mast', 'attachment', 'customer_name',
+] as const satisfies readonly (keyof FleetRecord)[];
+
+export default function AddVehicleModal({ onClose, onSubmit, existing = [] }: Props) {
   const [form, setForm] = useState({
     fleet_type: 'ELECTRICAL',
     veh_no: '',
@@ -16,6 +22,7 @@ export default function AddVehicleModal({ onClose, onSubmit }: Props) {
     category: '',
     chassis: '',
     mast: '',
+    attachment: '',
     yor: '',
     yom: '',
     condition: 'OK',
@@ -25,6 +32,19 @@ export default function AddVehicleModal({ onClose, onSubmit }: Props) {
     remarks: '',
     location: '',
   });
+
+  const suggestions = useMemo(() => {
+    const out: Record<string, string[]> = {};
+    for (const field of SUGGEST_FIELDS) {
+      const set = new Set<string>();
+      for (const r of existing) {
+        const v = r[field];
+        if (typeof v === 'string' && v.trim()) set.add(v.trim());
+      }
+      out[field] = Array.from(set).sort();
+    }
+    return out;
+  }, [existing]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +56,16 @@ export default function AddVehicleModal({ onClose, onSubmit }: Props) {
     });
   };
 
+  const textFields: [keyof typeof form, string][] = [
+    ['brand', 'Brand'], ['model', 'Model'], ['category', 'Category'],
+    ['chassis', 'Chassis'], ['mast', 'Mast'], ['attachment', 'Attachment'],
+    ['yor', 'Year of Reg'], ['yom', 'Year of Mfg'],
+    ['customer_name', 'Customer'], ['salesman_name', 'Salesman'], ['location', 'Location'],
+  ];
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-bold mb-4">Add New Vehicle</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
           <div>
@@ -55,17 +82,28 @@ export default function AddVehicleModal({ onClose, onSubmit }: Props) {
               placeholder="FL0000" required
               className="w-full px-3 py-2 border rounded-md text-sm" />
           </div>
-          {[
-            ['brand', 'Brand'], ['model', 'Model'], ['category', 'Category'],
-            ['chassis', 'Chassis'], ['mast', 'Mast'], ['yor', 'Year of Reg'],
-            ['yom', 'Year of Mfg'], ['customer_name', 'Customer'], ['salesman_name', 'Salesman'], ['location', 'Location'],
-          ].map(([key, label]) => (
-            <div key={key}>
-              <label className="text-xs text-neutral-500 font-medium">{label}</label>
-              <input value={form[key as keyof typeof form]} onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md text-sm" />
-            </div>
-          ))}
+          {textFields.map(([key, label]) => {
+            const listId = suggestions[key] ? `sugg-${key}` : undefined;
+            return (
+              <div key={key}>
+                <label className="text-xs text-neutral-500 font-medium">{label}</label>
+                <input
+                  value={form[key]}
+                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                  list={listId}
+                  autoComplete="off"
+                  className="w-full px-3 py-2 border rounded-md text-sm"
+                />
+                {listId && (
+                  <datalist id={listId}>
+                    {suggestions[key].map((opt) => (
+                      <option key={opt} value={opt} />
+                    ))}
+                  </datalist>
+                )}
+              </div>
+            );
+          })}
           <div>
             <label className="text-xs text-neutral-500 font-medium">Condition</label>
             <select value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })}
