@@ -44,7 +44,7 @@ export default function StatsCards({ stats, onCardClick }: Props) {
           key={card.label}
           type="button"
           onClick={() => onCardClick?.(card.action)}
-          className="text-left bg-white rounded-lg p-4 shadow-sm border border-neutral-200 hover:shadow-md hover:border-neutral-300 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="text-left bg-white rounded-lg p-4 shadow-sm border border-neutral-200 hover:shadow-md hover:border-neutral-300 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">{card.label}</span>

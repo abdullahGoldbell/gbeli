@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { AuthUser } from '@/lib/types';
 
 interface AuthContextType {
@@ -17,59 +18,69 @@ const AuthContext = createContext<AuthContextType>({
   refreshUser: async () => {},
 });
 
+const LOGIN_PATH = '/login';
+
 export function useAuth() {
   return useContext(AuthContext);
+}
+
+/** Fetch a socket auth token for the signed-in user and hand it to the socket client. */
+async function loadSocketToken(): Promise<void> {
+  try {
+    const res = await fetch('/api/auth/token');
+    if (!res.ok) throw new Error(`Token request failed (${res.status})`);
+    const data = await res.json();
+    if (!data.token) return;
+    const { setSocketToken } = await import('@/lib/socket');
+    setSocketToken(data.token);
+  } catch {
+    // Socket stays unauthenticated; real-time updates simply won't arrive.
+  }
 }
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  // Fallback for a cookie the proxy accepted but the API rejected (or a network failure).
+  const redirectToLogin = useCallback(() => {
+    if (window.location.pathname !== LOGIN_PATH) router.replace(LOGIN_PATH);
+  }, [router]);
 
   const refreshUser = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/me');
       if (res.ok) {
-        const data = await res.json();
-        setUser(data);
-      } else {
-        setUser(null);
+        setUser(await res.json());
+        // Not awaited: first paint must not wait on the socket token.
+        void loadSocketToken();
+        return;
       }
+      setUser(null);
+      redirectToLogin();
     } catch {
       setUser(null);
+      redirectToLogin();
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [redirectToLogin]);
 
   const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
-    window.location.href = '/login';
+    window.location.href = LOGIN_PATH;
   }, []);
 
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
 
-  // Fetch socket token after auth is confirmed
-  useEffect(() => {
-    if (user) {
-      fetch('/api/auth/token')
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.token) {
-            import('@/lib/socket').then(({ setSocketToken }) => {
-              setSocketToken(data.token);
-            });
-          }
-        })
-        .catch(() => {});
-    }
-  }, [user]);
-
-  return (
-    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({ user, loading, logout, refreshUser }),
+    [user, loading, logout, refreshUser],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

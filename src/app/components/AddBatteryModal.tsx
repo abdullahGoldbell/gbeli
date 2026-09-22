@@ -66,7 +66,7 @@ export default function AddBatteryModal({ onClose, onSubmit }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+    <div role="presentation" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
       <div
         className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -78,10 +78,11 @@ export default function AddBatteryModal({ onClose, onSubmit }: Props) {
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
           {FIELDS.map((f) => (
             <div key={f.key}>
-              <label className="text-xs text-neutral-500 font-medium">
+              <label htmlFor={`battery-${f.key}`} className="text-xs text-neutral-500 font-medium">
                 {f.label}{f.key === 'bat_sn' ? ' *' : ''}
               </label>
               <input
+                id={`battery-${f.key}`}
                 type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
                 step={f.type === 'number' ? '0.01' : undefined}
                 value={form[f.key]}

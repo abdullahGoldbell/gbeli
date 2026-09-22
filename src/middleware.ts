@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-change-me');
+// Static reference so the value is inlined on the Edge runtime.
+const jwtSecretValue = process.env.JWT_SECRET;
+if (!jwtSecretValue) {
+  throw new Error('Missing required environment variable: JWT_SECRET');
+}
+const JWT_SECRET = new TextEncoder().encode(jwtSecretValue);
 const COOKIE_NAME = 'fms_token';
 
 const PUBLIC_PATHS = ['/login', '/api/auth/login'];

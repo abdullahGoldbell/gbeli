@@ -2,19 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+import { registerToastHandler, ToastType } from '@/lib/toast';
+
 interface Toast {
   id: string;
   message: string;
-  type: 'info' | 'success' | 'warning';
+  type: ToastType;
   timestamp: number;
-}
-
-let addToastExternal: ((message: string, type?: Toast['type']) => void) | null = null;
-
-export function showToast(message: string, type: Toast['type'] = 'info') {
-  if (addToastExternal) {
-    addToastExternal(message, type);
-  }
 }
 
 export default function Notifications() {
@@ -29,8 +23,8 @@ export default function Notifications() {
   }, []);
 
   useEffect(() => {
-    addToastExternal = addToast;
-    return () => { addToastExternal = null; };
+    registerToastHandler(addToast);
+    return () => registerToastHandler(null);
   }, [addToast]);
 
   if (toasts.length === 0) return null;

@@ -82,7 +82,7 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div role="presentation" className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         {/* Header */}
@@ -91,7 +91,7 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
             <h2 className="text-lg font-bold text-neutral-900">Upload FMS Excel</h2>
             <p className="text-xs text-neutral-500 mt-0.5">Import or update fleet data from spreadsheet</p>
           </div>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600 text-xl leading-none">&times;</button>
+          <button onClick={onClose} aria-label="Close" className="text-neutral-400 hover:text-neutral-600 text-xl leading-none">&times;</button>
         </div>
 
         {/* Body */}
@@ -100,6 +100,7 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
             <>
               {/* Drop Zone */}
               <div
+                role="presentation"
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
@@ -114,7 +115,8 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
                   ref={inputRef}
                   type="file"
                   accept=".xlsx,.xls"
-                  className="hidden"
+                  aria-label="Choose Excel file"
+                  className="sr-only"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }}
                 />
 

@@ -1,8 +1,24 @@
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
+const path = require('path');
+
+// Load .env.local so the socket server shares JWT_SECRET with Next.js
+// (pm2 / start.sh launch this file directly, outside Next's env loading).
+for (const file of ['.env.local', '.env']) {
+  try {
+    process.loadEnvFile(path.join(__dirname, file));
+  } catch {
+    // file absent — fall through to process.env as provided
+  }
+}
+
 const port = parseInt(process.env.SOCKET_PORT || '3001', 10);
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-secret-change-me');
+if (!process.env.JWT_SECRET) {
+  console.error('Missing required environment variable: JWT_SECRET');
+  process.exit(1);
+}
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 // jose is ESM-only — use dynamic import
 let jwtVerify;

@@ -13,7 +13,9 @@ const SUGGEST_FIELDS = [
   'brand', 'model', 'category', 'mast', 'attachment', 'customer_name',
 ] as const satisfies readonly (keyof FleetRecord)[];
 
-export default function AddVehicleModal({ onClose, onSubmit, existing = [] }: Props) {
+const NO_EXISTING: FleetRecord[] = [];
+
+export default function AddVehicleModal({ onClose, onSubmit, existing = NO_EXISTING }: Props) {
   const [form, setForm] = useState({
     fleet_type: 'ELECTRICAL',
     veh_no: '',
@@ -67,16 +69,16 @@ export default function AddVehicleModal({ onClose, onSubmit, existing = [] }: Pr
         <h2 className="text-lg font-bold mb-4">Add New Vehicle</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-neutral-500 font-medium">Fleet Type *</label>
-            <select value={form.fleet_type} onChange={(e) => setForm({ ...form, fleet_type: e.target.value })}
+            <label htmlFor="add-fleet_type" className="text-xs text-neutral-500 font-medium">Fleet Type *</label>
+            <select id="add-fleet_type" value={form.fleet_type} onChange={(e) => setForm({ ...form, fleet_type: e.target.value })}
               className="w-full px-3 py-2 border rounded-md text-sm">
               <option value="ELECTRICAL">Electrical</option>
               <option value="DIESEL">Diesel</option>
             </select>
           </div>
           <div>
-            <label className="text-xs text-neutral-500 font-medium">Vehicle No *</label>
-            <input value={form.veh_no} onChange={(e) => setForm({ ...form, veh_no: e.target.value })}
+            <label htmlFor="add-veh_no" className="text-xs text-neutral-500 font-medium">Vehicle No *</label>
+            <input id="add-veh_no" value={form.veh_no} onChange={(e) => setForm({ ...form, veh_no: e.target.value })}
               placeholder="FL0000" required
               className="w-full px-3 py-2 border rounded-md text-sm" />
           </div>
@@ -84,8 +86,9 @@ export default function AddVehicleModal({ onClose, onSubmit, existing = [] }: Pr
             const listId = suggestions[key] ? `sugg-${key}` : undefined;
             return (
               <div key={key}>
-                <label className="text-xs text-neutral-500 font-medium">{label}</label>
+                <label htmlFor={`add-${key}`} className="text-xs text-neutral-500 font-medium">{label}</label>
                 <input
+                  id={`add-${key}`}
                   value={form[key]}
                   onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                   list={listId}
@@ -103,8 +106,8 @@ export default function AddVehicleModal({ onClose, onSubmit, existing = [] }: Pr
             );
           })}
           <div>
-            <label className="text-xs text-neutral-500 font-medium">Condition</label>
-            <select value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })}
+            <label htmlFor="add-condition" className="text-xs text-neutral-500 font-medium">Condition</label>
+            <select id="add-condition" value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })}
               className="w-full px-3 py-2 border rounded-md text-sm">
               {['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'].map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -112,8 +115,8 @@ export default function AddVehicleModal({ onClose, onSubmit, existing = [] }: Pr
             </select>
           </div>
           <div>
-            <label className="text-xs text-neutral-500 font-medium">Release Status</label>
-            <select value={form.release_status} onChange={(e) => setForm({ ...form, release_status: e.target.value })}
+            <label htmlFor="add-release_status" className="text-xs text-neutral-500 font-medium">Release Status</label>
+            <select id="add-release_status" value={form.release_status} onChange={(e) => setForm({ ...form, release_status: e.target.value })}
               className="w-full px-3 py-2 border rounded-md text-sm">
               {['Release', 'Hold', 'Reserved'].map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -121,8 +124,8 @@ export default function AddVehicleModal({ onClose, onSubmit, existing = [] }: Pr
             </select>
           </div>
           <div className="col-span-2">
-            <label className="text-xs text-neutral-500 font-medium">Remarks</label>
-            <input value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })}
+            <label htmlFor="add-remarks" className="text-xs text-neutral-500 font-medium">Remarks</label>
+            <input id="add-remarks" value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })}
               className="w-full px-3 py-2 border rounded-md text-sm" />
           </div>
           <div className="col-span-2 flex justify-end gap-2 mt-2">

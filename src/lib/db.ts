@@ -1,10 +1,11 @@
 import sql from 'mssql';
+import { requireEnv } from '@/lib/env';
 
 const config: sql.config = {
-  server: process.env.MSSQL_SERVER || 'GBITR01V.goldbell.com.sg',
-  database: process.env.MSSQL_DATABASE || 'FMS',
-  user: process.env.MSSQL_USER || 'ReadUser',
-  password: process.env.MSSQL_PASSWORD || 'G0ldBell123',
+  server: requireEnv('MSSQL_SERVER'),
+  database: requireEnv('MSSQL_DATABASE'),
+  user: requireEnv('MSSQL_USER'),
+  password: requireEnv('MSSQL_PASSWORD'),
   port: parseInt(process.env.MSSQL_PORT || '1433'),
   options: {
     encrypt: false,

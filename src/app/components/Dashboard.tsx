@@ -1,305 +1,57 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { FleetRecord, FleetStats } from '@/lib/types';
-import { getSocket } from '@/lib/socket';
+import { useCallback, useState } from 'react';
+import { FleetRecord } from '@/lib/types';
 import StatsCards from './StatsCards';
-import Filters from './Filters';
-import FleetTable from './FleetTable';
-import Notifications, { showToast } from './Notifications';
-import AddVehicleModal from './AddVehicleModal';
-import MoveVehicleModal, { MoveField } from './MoveVehicleModal';
-import UploadModal from './UploadModal';
+import Notifications from './Notifications';
 import { useAuth } from './AuthProvider';
-import AdminPanel from './AdminPanel';
-import SoldTable from './SoldTable';
-import BatteryTable from './BatteryTable';
-import OutTable from './OutTable';
-
-type ViewTab = 'fleet' | 'out' | 'sold' | 'battery';
-
-interface FilterState {
-  fleet_type: string;
-  condition: string;
-  brand: string;
-  category: string;
-  search: string;
-  release_status: string;
-}
+import DashboardHeader from './dashboard/DashboardHeader';
+import ViewTabs from './dashboard/ViewTabs';
+import FleetView from './dashboard/FleetView';
+import DashboardViews from './dashboard/DashboardViews';
+import DashboardModals, { DashboardModal } from './dashboard/DashboardModals';
+import { useFleetData } from './dashboard/useFleetData';
+import { useFleetSocket } from './dashboard/useFleetSocket';
+import { useFleetMutations } from './dashboard/useFleetMutations';
+import { buildMoveModal } from './dashboard/moveModalConfig';
+import { CardAction, CellValue, EMPTY_FILTERS, MoveModalState, ViewTab } from './dashboard/types';
 
 export default function Dashboard() {
-  const [data, setData] = useState<FleetRecord[]>([]);
-  const [stats, setStats] = useState<FleetStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<FilterState>({
-    fleet_type: '', condition: '', brand: '', category: '', search: '', release_status: '',
-  });
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [moveModal, setMoveModal] = useState<{
-    title: string;
-    fields: MoveField[];
-    submit: (values: Record<string, string>) => Promise<void>;
-  } | null>(null);
-  const [updatedRowIds, setUpdatedRowIds] = useState<Set<number>>(new Set());
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { user, loading: authLoading, logout } = useAuth();
-  const [showAdmin, setShowAdmin] = useState(false);
+  const isAdmin = !!user?.isAdmin;
+
+  const fleet = useFleetData(!authLoading);
+  const { data, setData, stats, loading, filters, fetchData, fetchStats } = fleet;
+  const updatedRowIds = useFleetSocket({ isAdmin, setData, fetchStats });
+  const { handleUpdate, submitMove, handleDelete, handleAdd } = useFleetMutations({ setData, fetchStats });
+
+  const [modal, setModal] = useState<DashboardModal>(null);
+  const [moveModal, setMoveModal] = useState<MoveModalState | null>(null);
   const [view, setView] = useState<ViewTab>('fleet');
-  const router = useRouter();
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace('/login');
-    }
-  }, [authLoading, user, router]);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const res = await fetch('/api/stats');
-      const json = await res.json();
-      setStats(json);
-    } catch (err) {
-      console.error('Failed to fetch stats:', err);
-    }
-  }, []);
-
-  const fetchData = useCallback(async (f?: FilterState) => {
-    try {
-      const active = f || filters;
-      const params = new URLSearchParams();
-      if (active.fleet_type) params.set('fleet_type', active.fleet_type);
-      if (active.condition) params.set('condition', active.condition);
-      if (active.brand) params.set('brand', active.brand);
-      if (active.category) params.set('category', active.category);
-      if (active.search) params.set('search', active.search);
-      if (active.release_status) params.set('release_status', active.release_status);
-
-      const res = await fetch(`/api/fleet?${params}`);
-      const json = await res.json();
-      setData(json);
-    } catch (err) {
-      console.error('Failed to fetch fleet data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  // Initial load — wait for auth to be ready
-  useEffect(() => {
-    if (!authLoading) {
-      fetchData();
-      fetchStats();
-    }
-  }, [authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Socket.io real-time updates
-  useEffect(() => {
-    const socket = getSocket();
-
-    socket.on('fleet:updated', (record: FleetRecord) => {
-      // Non-admin: only show Release vehicles
-      if (!user?.isAdmin && record.release_status !== 'Release') {
-        setData((prev) => prev.filter((r) => r.id !== record.id));
-        return;
-      }
-      setData((prev) => {
-        const exists = prev.some((r) => r.id === record.id);
-        if (exists) return prev.map((r) => (r.id === record.id ? record : r));
-        // Record became visible (e.g. changed to Release)
-        return [...prev, record];
-      });
-      setUpdatedRowIds((prev) => new Set(prev).add(record.id));
-      setTimeout(() => {
-        setUpdatedRowIds((prev) => {
-          const next = new Set(prev);
-          next.delete(record.id);
-          return next;
-        });
-      }, 2000);
-      showToast(`${record.veh_no} updated${record.updated_by ? ` by ${record.updated_by}` : ''}`, 'info');
-      fetchStats();
-    });
-
-    socket.on('fleet:created', (record: FleetRecord) => {
-      // Non-admin: only show Release vehicles
-      if (!user?.isAdmin && record.release_status !== 'Release') return;
-      setData((prev) => [...prev, record]);
-      showToast(`${record.veh_no} added to fleet`, 'success');
-      fetchStats();
-    });
-
-    socket.on('fleet:deleted', (record: FleetRecord) => {
-      setData((prev) => prev.filter((r) => r.id !== record.id));
-      showToast(`${record.veh_no} removed from fleet`, 'warning');
-      fetchStats();
-    });
-
-    return () => {
-      socket.off('fleet:updated');
-      socket.off('fleet:created');
-      socket.off('fleet:deleted');
-    };
-  }, [fetchStats, user?.isAdmin]);
-
-  // Filter change with debounce for search
-  const handleFilterChange = useCallback((newFilters: FilterState) => {
-    setFilters(newFilters);
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    searchTimeoutRef.current = setTimeout(() => {
-      fetchData(newFilters);
-    }, 300);
-  }, [fetchData]);
-
-  // Update handler
-  const handleUpdate = useCallback(async (id: number, field: string, value: string | number | boolean | null) => {
-    try {
-      const res = await fetch(`/api/fleet/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [field]: value }),
-      });
-      if (!res.ok) throw new Error('Update failed');
-      const result = await res.json();
-      if (result.moved) {
-        setData((prev) => prev.filter((r) => r.id !== id));
-        const dest = result.to === 'sold' ? 'Sold' : 'Out';
-        showToast(`${result.veh_no} moved to ${dest}`, 'success');
-      } else {
-        setData((prev) => prev.map((r) => (r.id === id ? result : r)));
-        getSocket().emit('fleet:updated', result);
-      }
-      fetchStats();
-    } catch (err) {
-      console.error('Update failed:', err);
-      showToast('Failed to save change', 'warning');
-    }
-  }, [fetchStats]);
-
-  // Status-move handler: PUT fleet row with extra fields, expect { moved: true }
-  const submitMove = useCallback(async (id: number, body: Record<string, string | null>) => {
-    const res = await fetch(`/api/fleet/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      throw new Error(j.error || 'Move failed');
-    }
-    const result = await res.json();
-    if (result.moved) {
-      setData((prev) => prev.filter((r) => r.id !== id));
-      const dest = result.to === 'sold' ? 'Sold' : 'Out';
-      showToast(`${result.veh_no} moved to ${dest}`, 'success');
-    } else {
-      setData((prev) => prev.map((r) => (r.id === id ? result : r)));
-    }
-    fetchStats();
-  }, [fetchStats]);
+  const closeModal = useCallback(() => setModal(null), []);
+  const closeMoveModal = useCallback(() => setMoveModal(null), []);
 
   const handleStatusMove = useCallback((row: FleetRecord, status: 'Out' | 'Sold') => {
-    if (status === 'Out') {
-      setMoveModal({
-        title: `Move ${row.veh_no} to Out`,
-        fields: [
-          { key: 'out_date', label: 'Out Date', type: 'date', required: true },
-          { key: 'customer_name', label: 'Customer', type: 'text', defaultValue: row.customer_name || '' },
-          { key: 'name', label: 'Name', type: 'text', defaultValue: row.name || '' },
-          { key: 'location', label: 'Location', type: 'text' },
-          { key: 'remarks', label: 'Remark', type: 'text', defaultValue: row.remarks || '' },
-        ],
-        submit: async (values) => {
-          await submitMove(row.id, {
-            release_status: 'Out',
-            out_date: values.out_date || null,
-            customer_name: values.customer_name || null,
-            name: values.name || null,
-            location: values.location || null,
-            remarks: values.remarks || null,
-          });
-          setMoveModal(null);
-        },
-      });
-    } else {
-      setMoveModal({
-        title: `Move ${row.veh_no} to Sold`,
-        fields: [
-          { key: 'sold_date', label: 'Sold Date', type: 'date', required: true },
-        ],
-        submit: async (values) => {
-          await submitMove(row.id, {
-            release_status: 'Sold',
-            sold_date: values.sold_date || null,
-          });
-          setMoveModal(null);
-        },
-      });
-    }
-  }, [submitMove]);
+    setMoveModal(buildMoveModal(row, status, submitMove, closeMoveModal));
+  }, [submitMove, closeMoveModal]);
 
-  // Delete handler
-  const handleDelete = useCallback(async (id: number, vehNo: string) => {
-    try {
-      const res = await fetch(`/api/fleet/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
-      const { deleted } = await res.json();
-      setData((prev) => prev.filter((r) => r.id !== id));
-      getSocket().emit('fleet:deleted', deleted);
-      showToast(`${vehNo} deleted`, 'warning');
-      fetchStats();
-    } catch (err) {
-      console.error('Delete failed:', err);
-      showToast('Failed to delete', 'warning');
-    }
-  }, [fetchStats]);
-
-  // Add handler
-  const handleAdd = useCallback(async (formData: Record<string, string | number | boolean | null>) => {
-    try {
-      const res = await fetch('/api/fleet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) throw new Error('Create failed');
-      const created = await res.json();
-      setData((prev) => [...prev, created]);
-      getSocket().emit('fleet:created', created);
-      setShowAddModal(false);
-      showToast(`${created.veh_no} added`, 'success');
-      fetchStats();
-    } catch (err) {
-      console.error('Create failed:', err);
-      showToast('Failed to add vehicle', 'warning');
-    }
-  }, [fetchStats]);
-
-  // Extract unique filter options from data
-  const brands = [...new Set(data.map((r) => r.brand).filter(Boolean) as string[])].sort();
-  const categories = [...new Set(data.map((r) => r.category).filter(Boolean) as string[])].sort();
-  const conditions = [...new Set(data.map((r) => r.condition).filter(Boolean) as string[])].sort();
-
-  const handleStatsCardClick = useCallback((action: { kind: 'filter'; fleet_type?: string; reset?: boolean } | { kind: 'nav'; tab: 'out' | 'sold' | 'battery' }) => {
+  const handleStatsCardClick = useCallback((action: CardAction) => {
     if (action.kind === 'nav') {
       setView(action.tab);
       return;
     }
-    const next: FilterState = action.reset
-      ? { fleet_type: '', condition: '', brand: '', category: '', search: '', release_status: '' }
-      : { fleet_type: '', condition: '', brand: '', category: '', search: '', release_status: '', ...action };
     setView('fleet');
-    setFilters(next);
-    fetchData(next);
-  }, [fetchData]);
+    fleet.applyFilters(action.reset ? EMPTY_FILTERS : { ...EMPTY_FILTERS, ...action });
+  }, [fleet]);
 
-  const handleExport = () => {
-    const params = new URLSearchParams();
-    if (filters.fleet_type) params.set('fleet_type', filters.fleet_type);
-    window.open(`/api/export?${params}`, '_blank');
-  };
+  const handleAddSubmit = useCallback(async (formData: Record<string, CellValue>) => {
+    if (await handleAdd(formData)) setModal(null);
+  }, [handleAdd]);
+
+  const handleUploaded = useCallback(() => {
+    fetchData();
+    fetchStats();
+  }, [fetchData, fetchStats]);
 
   if (authLoading) {
     return (
@@ -312,112 +64,43 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       <Notifications />
+      <DashboardHeader user={user} vehicleCount={data.length} onOpenAdmin={() => setModal('admin')} onLogout={logout} />
 
-      {/* Header */}
-      <header className="bg-neutral-900 text-white px-6 py-4 shadow-lg">
-        <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">FMS Fleet Dashboard</h1>
-            <p className="text-neutral-400 text-sm">Fleet Management System &middot; {data.length} vehicles</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs text-neutral-400">Live</span>
-            </div>
-            {user && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-neutral-300">{user.displayName || user.username}</span>
-                {user.isAdmin && (
-                  <button
-                    onClick={() => setShowAdmin(true)}
-                    className="text-neutral-400 hover:text-white transition-colors text-lg"
-                    title="Admin Panel"
-                  >
-                    ⚙
-                  </button>
-                )}
-                <button
-                  onClick={logout}
-                  className="text-xs text-neutral-400 hover:text-white border border-neutral-600 hover:border-neutral-400 px-2.5 py-1 rounded transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
-        {user?.isAdmin && <StatsCards stats={stats} onCardClick={handleStatsCardClick} />}
-        {user?.isAdmin && (
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => setView('fleet')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'fleet' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'}`}
-            >Fleet</button>
-            <button
-              onClick={() => setView('out')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'out' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'}`}
-            >Out</button>
-            <button
-              onClick={() => setView('sold')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'sold' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'}`}
-            >Sold</button>
-            <button
-              onClick={() => setView('battery')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'battery' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50'}`}
-            >Battery Price</button>
-          </div>
-        )}
-        {view === 'out' && user?.isAdmin && <OutTable onChanged={fetchStats} />}
-        {view === 'sold' && user?.isAdmin && <SoldTable onChanged={fetchStats} />}
-        {view === 'battery' && user?.isAdmin && <BatteryTable onChanged={fetchStats} />}
-        {view === 'fleet' && (<>
-          <Filters
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            brands={brands}
-            categories={categories}
-            conditions={conditions}
-            onExport={handleExport}
-            onAdd={() => setShowAddModal(true)}
-            onUpload={() => setShowUploadModal(true)}
-            showAdd={!!user?.isAdmin}
-            showExport={!!user?.isAdmin}
-            showStatusFilter={!!user?.isAdmin}
-          />
-          {loading ? (
-            <div className="bg-white rounded-lg p-12 text-center text-neutral-400">
-              Loading fleet data...
-            </div>
-          ) : (
-            <FleetTable data={data} onUpdate={handleUpdate} onDelete={handleDelete} onStatusMove={handleStatusMove} updatedRowIds={updatedRowIds} hiddenColumns={user?.hiddenColumns || []} isAdmin={!!user?.isAdmin} />
-          )}
-        </>)}
+        {isAdmin && <StatsCards stats={stats} onCardClick={handleStatsCardClick} />}
+        {isAdmin && <ViewTabs view={view} onChange={setView} />}
+        <DashboardViews
+          view={view}
+          isAdmin={isAdmin}
+          onChanged={fetchStats}
+          fleetView={
+            <FleetView
+              data={data}
+              loading={loading}
+              filters={filters}
+              isAdmin={isAdmin}
+              hiddenColumns={user?.hiddenColumns || []}
+              updatedRowIds={updatedRowIds}
+              onFilterChange={fleet.handleFilterChange}
+              onAdd={() => setModal('add')}
+              onUpload={() => setModal('upload')}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              onStatusMove={handleStatusMove}
+            />
+          }
+        />
       </main>
 
-      {showAddModal && <AddVehicleModal onClose={() => setShowAddModal(false)} onSubmit={handleAdd} existing={data} />}
-      {moveModal && (
-        <MoveVehicleModal
-          title={moveModal.title}
-          fields={moveModal.fields}
-          onClose={() => setMoveModal(null)}
-          onSubmit={moveModal.submit}
-        />
-      )}
-      {showUploadModal && (
-        <UploadModal
-          onClose={() => setShowUploadModal(false)}
-          onSuccess={() => {
-            fetchData();
-            fetchStats();
-          }}
-        />
-      )}
-      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
+      <DashboardModals
+        modal={modal}
+        moveModal={moveModal}
+        existing={data}
+        onClose={closeModal}
+        onCloseMove={closeMoveModal}
+        onAdd={handleAddSubmit}
+        onUploaded={handleUploaded}
+      />
     </div>
   );
 }

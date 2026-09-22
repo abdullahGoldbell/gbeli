@@ -6,6 +6,7 @@ import InlineEdit from './InlineEdit';
 import UploadModal from './UploadModal';
 import { useColumnOrder, useOrderedColumns } from '@/lib/useColumnOrder';
 import TablePagination from './TablePagination';
+import SortableTableHead from './ui/SortableTableHead';
 
 interface Props {
   onChanged?: () => void;
@@ -50,12 +51,18 @@ export default function SoldTable({ onChanged }: Props) {
   const fetchData = useCallback(() => {
     setLoading(true);
     fetch('/api/sold')
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => null);
+          throw new Error(body?.error || `Request failed (${r.status})`);
+        }
+        return r.json();
+      })
       .then((j) => {
         if (Array.isArray(j)) setData(j);
-        else setError(j.error || 'Failed to load');
+        else setError(j?.error || 'Failed to load');
       })
-      .catch(() => setError('Network error'))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Network error'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -138,38 +145,16 @@ export default function SoldTable({ onChanged }: Props) {
       )}
       <div className="overflow-x-auto">
         <table className="text-sm w-full">
-          <thead className="bg-neutral-800 text-white sticky top-0">
-            <tr>
-              {orderedColumns.map((c) => (
-                <th
-                  key={c.key as string}
-                  {...dragProps(c.key as string)}
-                  className={`px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap cursor-move transition-colors ${dragClass(c.key as string)}`}
-                  title="Drag to reorder column"
-                >
-                  <button onClick={() => toggleSort(c.key)} className="hover:text-blue-300 flex items-center gap-1">
-                    <span className="text-neutral-500">⋮⋮</span>
-                    {c.label}
-                    {sortKey === c.key && <span className="text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>}
-                  </button>
-                </th>
-              ))}
-              <th className="px-2 py-2 w-10" />
-            </tr>
-            <tr className="bg-neutral-100">
-              {orderedColumns.map((c) => (
-                <th key={`f-${c.key as string}`} className="px-2 py-1">
-                  <input
-                    value={filters[c.key] || ''}
-                    onChange={(e) => setFilters({ ...filters, [c.key]: e.target.value })}
-                    placeholder="Filter..."
-                    className="w-full px-2 py-1 text-xs text-neutral-800 border border-neutral-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </th>
-              ))}
-              <th />
-            </tr>
-          </thead>
+          <SortableTableHead
+            columns={orderedColumns}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onToggleSort={toggleSort}
+            filters={filters}
+            onFiltersChange={setFilters}
+            dragProps={dragProps}
+            dragClass={dragClass}
+          />
           <tbody>
             {pageRows.map((row) => (
               <tr key={row.id} className="hover:bg-blue-50/30 border-b border-neutral-100">

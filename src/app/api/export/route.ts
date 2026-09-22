@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
         .query('SELECT column_key FROM user_hidden_columns WHERE user_id = @userId');
       hiddenColumns = colsResult.recordset.map((r: { column_key: string }) => r.column_key);
     }
+    const hiddenSet = new Set(hiddenColumns);
 
     // Filter out hidden columns from data
     const filterColumns = (records: Record<string, unknown>[]) => {
@@ -72,7 +73,7 @@ export async function GET(req: NextRequest) {
       return records.map((r) => {
         const filtered: Record<string, unknown> = {};
         for (const [key, val] of Object.entries(r)) {
-          if (!hiddenColumns.includes(key)) filtered[key] = val;
+          if (!hiddenSet.has(key)) filtered[key] = val;
         }
         return filtered;
       });

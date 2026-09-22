@@ -38,13 +38,19 @@ export function useColumnOrder(storageKey: string, defaultKeys: string[]) {
       }
       const saved: unknown = JSON.parse(raw);
       if (!Array.isArray(saved)) return;
-      const known = saved.filter((k): k is string => typeof k === 'string' && defaults.includes(k));
-      const missing = defaults.filter((k) => !known.includes(k));
+      const defaultSet = new Set(defaults);
+      const known = saved.filter((k): k is string => typeof k === 'string' && defaultSet.has(k));
+      const knownSet = new Set(known);
+      const missing = defaults.filter((k) => !knownSet.has(k));
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setOrder([...known, ...missing]);
     } catch {
-      // Corrupted entry — fall back to defaults.
-      setOrder(defaults);
+      // Corrupted entry — drop it; `order` already holds the defaults.
+      try {
+        localStorage.removeItem(storageKey);
+      } catch {
+        // Storage unavailable — nothing to clean up.
+      }
     }
   }, [storageKey, defaultsSignature]);
 
@@ -59,21 +65,14 @@ export function useColumnOrder(storageKey: string, defaultKeys: string[]) {
 
   const moveColumn = useCallback((from: string, to: string) => {
     if (from === to) return;
-    setOrder((prev) => {
-      const fromIdx = prev.indexOf(from);
-      const toIdx = prev.indexOf(to);
-      if (fromIdx === -1 || toIdx === -1) return prev;
-      const next = [...prev];
-      next.splice(fromIdx, 1);
-      next.splice(toIdx, 0, from);
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(next));
-      } catch {
-        // Ignore storage failures.
-      }
-      return next;
-    });
-  }, [storageKey]);
+    const fromIdx = order.indexOf(from);
+    const toIdx = order.indexOf(to);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const next = [...order];
+    next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, from);
+    persist(next);
+  }, [order, persist]);
 
   const reset = useCallback(() => {
     persist(defaultsSignature.split('|'));

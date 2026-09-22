@@ -35,6 +35,7 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="text"
+          aria-label="Search vehicle, customer, model..."
           placeholder="Search vehicle, customer, model..."
           value={filters.search}
           onChange={(e) => update('search', e.target.value)}
@@ -42,6 +43,7 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
         />
 
         <select
+          aria-label="Fleet type"
           value={filters.fleet_type}
           onChange={(e) => update('fleet_type', e.target.value)}
           className="px-3 py-2 border border-neutral-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -52,6 +54,7 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
         </select>
 
         <select
+          aria-label="Condition"
           value={filters.condition}
           onChange={(e) => update('condition', e.target.value)}
           className="px-3 py-2 border border-neutral-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -63,6 +66,7 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
         </select>
 
         <select
+          aria-label="Brand"
           value={filters.brand}
           onChange={(e) => update('brand', e.target.value)}
           className="px-3 py-2 border border-neutral-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -74,6 +78,7 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
         </select>
 
         <select
+          aria-label="Category"
           value={filters.category}
           onChange={(e) => update('category', e.target.value)}
           className="px-3 py-2 border border-neutral-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -86,6 +91,7 @@ export default function Filters({ filters, onFilterChange, brands, categories, c
 
         {showStatusFilter && (
           <select
+            aria-label="Release status"
             value={filters.release_status}
             onChange={(e) => update('release_status', e.target.value)}
             className="px-3 py-2 border border-neutral-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"

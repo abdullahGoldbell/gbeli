@@ -50,17 +50,18 @@ export default function MoveVehicleModal({ title, fields, submitLabel = 'Confirm
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+    <div role="presentation" className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-bold mb-4">{title}</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3">
           {fields.map((f) => (
             <div key={f.key}>
-              <label className="text-xs text-neutral-500 font-medium">
+              <label htmlFor={`move-${f.key}`} className="text-xs text-neutral-500 font-medium">
                 {f.label}{f.required ? ' *' : ''}
               </label>
               {f.type === 'select' ? (
                 <select
+                  id={`move-${f.key}`}
                   value={values[f.key]}
                   onChange={(e) => setValues({ ...values, [f.key]: e.target.value })}
                   className="w-full px-3 py-2 border rounded-md text-sm"
@@ -71,6 +72,7 @@ export default function MoveVehicleModal({ title, fields, submitLabel = 'Confirm
                 </select>
               ) : (
                 <input
+                  id={`move-${f.key}`}
                   type={f.type}
                   value={values[f.key]}
                   onChange={(e) => setValues({ ...values, [f.key]: e.target.value })}

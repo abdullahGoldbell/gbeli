@@ -47,21 +47,22 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-xs text-[#94a3b8] font-medium mb-1.5">Username</label>
+            <label htmlFor="login-username" className="block text-xs text-[#94a3b8] font-medium mb-1.5">Username</label>
             <input
+              id="login-username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full bg-[#0f172a] border border-[#334155] rounded-md px-3 py-2.5 text-sm text-[#f8fafc] placeholder-[#64748b] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               placeholder="Enter username"
-              autoFocus
               required
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-xs text-[#94a3b8] font-medium mb-1.5">Password</label>
+            <label htmlFor="login-password" className="block text-xs text-[#94a3b8] font-medium mb-1.5">Password</label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
