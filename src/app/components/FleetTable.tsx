@@ -6,15 +6,18 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   flexRender,
   createColumnHelper,
   SortingState,
   ColumnResizeMode,
   ColumnDef,
+  PaginationState,
 } from '@tanstack/react-table';
 import { FleetRecord } from '@/lib/types';
 import InlineEdit from './InlineEdit';
 import { useColumnOrder } from '@/lib/useColumnOrder';
+import TablePagination from './TablePagination';
 
 interface Props {
   data: FleetRecord[];
@@ -29,6 +32,7 @@ interface Props {
 const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'];
 const RELEASE_STATUSES = ['Release', 'Hold', 'Out', 'Sold'];
 const LEASE_PERIODS = ['Long Term', 'Short Term'];
+const PAGE_SIZE = 40;
 
 function todayISO(): string {
   const d = new Date();
@@ -90,6 +94,7 @@ function ReservationDateCell({ value, onSave, isAdmin }: { value: string | null;
 
 export default function FleetTable({ data, onUpdate, onDelete, onStatusMove, updatedRowIds, hiddenColumns, isAdmin }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: PAGE_SIZE });
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
   const columnHelper = createColumnHelper<FleetRecord>();
 
@@ -305,12 +310,14 @@ export default function FleetTable({ data, onUpdate, onDelete, onStatusMove, upd
   const table = useReactTable({
     data,
     columns: visibleColumns,
-    state: { sorting, columnOrder },
+    state: { sorting, columnOrder, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     columnResizeMode,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
@@ -368,9 +375,12 @@ export default function FleetTable({ data, onUpdate, onDelete, onStatusMove, upd
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-2 bg-neutral-50 text-xs text-neutral-500 border-t border-neutral-200">
-        {data.length} vehicles
-      </div>
+      <TablePagination
+        page={pagination.pageIndex + 1}
+        pageSize={PAGE_SIZE}
+        totalRows={data.length}
+        onPageChange={(page) => setPagination((current) => ({ ...current, pageIndex: page - 1 }))}
+      />
     </div>
   );
 }

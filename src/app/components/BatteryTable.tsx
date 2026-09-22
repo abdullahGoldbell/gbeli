@@ -6,6 +6,7 @@ import InlineEdit from './InlineEdit';
 import UploadModal from './UploadModal';
 import AddBatteryModal from './AddBatteryModal';
 import { useColumnOrder, useOrderedColumns } from '@/lib/useColumnOrder';
+import TablePagination from './TablePagination';
 
 interface Props {
   onChanged?: () => void;
@@ -27,6 +28,7 @@ const COLUMNS: { key: keyof BatteryRecord; label: string; type?: 'text' | 'numbe
   { key: 'ah', label: 'AH' },
   { key: 'socket', label: 'Socket' },
 ];
+const PAGE_SIZE = 40;
 
 export default function BatteryTable({ onChanged }: Props) {
   const [data, setData] = useState<BatteryRecord[]>([]);
@@ -35,6 +37,7 @@ export default function BatteryTable({ onChanged }: Props) {
   const [filters, setFilters] = useState<Partial<Record<keyof BatteryRecord, string>>>({});
   const [sortKey, setSortKey] = useState<keyof BatteryRecord>('regen_date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [page, setPage] = useState(1);
   const [showUpload, setShowUpload] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
 
@@ -123,6 +126,10 @@ export default function BatteryTable({ onChanged }: Props) {
     return out;
   }, [data, filters, sortKey, sortDir]);
 
+  useEffect(() => { setPage(1); }, [filters, sortKey, sortDir]);
+
+  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const toggleSort = (k: keyof BatteryRecord) => {
     if (k === sortKey) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     else { setSortKey(k); setSortDir('asc'); }
@@ -184,7 +191,7 @@ export default function BatteryTable({ onChanged }: Props) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((row) => (
+            {pageRows.map((row) => (
               <tr key={row.id} className="hover:bg-blue-50/30 border-b border-neutral-100">
                 {orderedColumns.map((c) => {
                   const v = row[c.key];
@@ -213,6 +220,7 @@ export default function BatteryTable({ onChanged }: Props) {
           </tbody>
         </table>
       </div>
+      <TablePagination page={page} pageSize={PAGE_SIZE} totalRows={filtered.length} onPageChange={setPage} />
     </div>
   );
 }

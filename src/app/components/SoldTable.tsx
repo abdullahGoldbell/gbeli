@@ -5,6 +5,7 @@ import { SoldRecord } from '@/lib/types';
 import InlineEdit from './InlineEdit';
 import UploadModal from './UploadModal';
 import { useColumnOrder, useOrderedColumns } from '@/lib/useColumnOrder';
+import TablePagination from './TablePagination';
 
 interface Props {
   onChanged?: () => void;
@@ -28,6 +29,7 @@ const COLUMNS: { key: keyof SoldRecord; label: string; type?: 'text' | 'number' 
   { key: 'remarks', label: 'Remarks' },
   { key: 'do_no', label: 'DO No.' },
 ];
+const PAGE_SIZE = 40;
 
 export default function SoldTable({ onChanged }: Props) {
   const [data, setData] = useState<SoldRecord[]>([]);
@@ -36,6 +38,7 @@ export default function SoldTable({ onChanged }: Props) {
   const [filters, setFilters] = useState<Partial<Record<keyof SoldRecord, string>>>({});
   const [sortKey, setSortKey] = useState<keyof SoldRecord>('sold_date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [page, setPage] = useState(1);
   const [showUpload, setShowUpload] = useState(false);
 
   const { order, dragProps, dragClass, reset } = useColumnOrder(
@@ -107,6 +110,10 @@ export default function SoldTable({ onChanged }: Props) {
     return out;
   }, [data, filters, sortKey, sortDir]);
 
+  useEffect(() => { setPage(1); }, [filters, sortKey, sortDir]);
+
+  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const toggleSort = (k: keyof SoldRecord) => {
     if (k === sortKey) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     else { setSortKey(k); setSortDir('asc'); }
@@ -164,7 +171,7 @@ export default function SoldTable({ onChanged }: Props) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((row) => (
+            {pageRows.map((row) => (
               <tr key={row.id} className="hover:bg-blue-50/30 border-b border-neutral-100">
                 {orderedColumns.map((c) => {
                   const v = row[c.key];
@@ -193,6 +200,7 @@ export default function SoldTable({ onChanged }: Props) {
           </tbody>
         </table>
       </div>
+      <TablePagination page={page} pageSize={PAGE_SIZE} totalRows={filtered.length} onPageChange={setPage} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import MoveVehicleModal from './MoveVehicleModal';
 import { getSocket } from '@/lib/socket';
 import { showToast } from './Notifications';
 import { useColumnOrder, useOrderedColumns } from '@/lib/useColumnOrder';
+import TablePagination from './TablePagination';
 
 interface Props {
   onChanged?: () => void;
@@ -17,6 +18,7 @@ type SortDir = 'asc' | 'desc';
 
 const CONDITIONS = ['REPAIRING', 'PENDING QUOTATION', 'OK', 'PENDING PRE-DEPLOYMENT', 'PENDING POST-DEPLOYMENT', 'AWAITING FOR SPARES', 'CANIBALISED'];
 const TYPES = ['ELECTRICAL', 'DIESEL'];
+const PAGE_SIZE = 40;
 
 const COLUMNS: { key: keyof OutRecord; label: string; type?: 'text' | 'number' | 'select'; options?: string[] }[] = [
   { key: 'out_date', label: 'Out Date' },
@@ -46,6 +48,7 @@ export default function OutTable({ onChanged }: Props) {
   const [filters, setFilters] = useState<Partial<Record<keyof OutRecord, string>>>({});
   const [sortKey, setSortKey] = useState<keyof OutRecord>('out_date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [page, setPage] = useState(1);
   const [showUpload, setShowUpload] = useState(false);
   const [restoreFor, setRestoreFor] = useState<OutRecord | null>(null);
 
@@ -142,6 +145,10 @@ export default function OutTable({ onChanged }: Props) {
     return out;
   }, [data, filters, sortKey, sortDir]);
 
+  useEffect(() => { setPage(1); }, [filters, sortKey, sortDir]);
+
+  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const toggleSort = (k: keyof OutRecord) => {
     if (k === sortKey) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     else { setSortKey(k); setSortDir('asc'); }
@@ -201,7 +208,7 @@ export default function OutTable({ onChanged }: Props) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((row) => (
+            {pageRows.map((row) => (
               <tr key={row.id} className="hover:bg-blue-50/30 border-b border-neutral-100">
                 {orderedColumns.map((c) => {
                   const v = row[c.key];
@@ -244,6 +251,7 @@ export default function OutTable({ onChanged }: Props) {
           </tbody>
         </table>
       </div>
+      <TablePagination page={page} pageSize={PAGE_SIZE} totalRows={filtered.length} onPageChange={setPage} />
       {restoreFor && (
         <MoveVehicleModal
           title={`Move ${restoreFor.veh_no || 'vehicle'} back to Fleet`}
