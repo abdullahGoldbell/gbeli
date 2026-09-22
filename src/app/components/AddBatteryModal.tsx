@@ -73,7 +73,7 @@ export default function AddBatteryModal({ onClose, onSubmit }: Props) {
       >
         <h2 className="text-lg font-bold mb-4">Add Battery</h2>
         {error && (
-          <div className="mb-3 px-3 py-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">{error}</div>
+          <div className="mb-3 px-3 py-2 bg-alert-soft border border-danger/30 rounded text-sm text-danger">{error}</div>
         )}
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
           {FIELDS.map((f) => (
@@ -103,7 +103,7 @@ export default function AddBatteryModal({ onClose, onSubmit }: Props) {
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 text-sm bg-violet-600 text-white rounded-md hover:bg-violet-700 font-medium disabled:opacity-50"
+              className="px-4 py-2 text-sm bg-charcoal-light text-white rounded-md hover:bg-charcoal font-medium disabled:opacity-50"
             >
               {submitting ? 'Saving…' : 'Add Battery'}
             </button>

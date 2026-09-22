@@ -19,7 +19,7 @@ export default function ColumnAccessTab({ users, access }: ColumnAccessTabProps)
           id="admin-columns-user"
           value={access.selectedUserId || ''}
           onChange={(e) => access.selectUserById(e.target.value)}
-          className="w-full bg-[#0f172a] border border-[#334155] rounded-md px-3 py-2 text-sm text-[#f8fafc] focus:outline-none focus:border-blue-500"
+          className="w-full bg-[#0f172a] border border-[#334155] rounded-md px-3 py-2 text-sm text-[#f8fafc] focus:outline-none focus:border-primary"
         >
           <option value="">Choose a user...</option>
           {users.map((u) => (

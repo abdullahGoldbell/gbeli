@@ -162,7 +162,7 @@ export default function OutTable({ onChanged }: Props) {
   };
 
   if (loading) return <div className="bg-white rounded-lg p-12 text-center text-neutral-400">Loading out records...</div>;
-  if (error) return <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">{error}</div>;
+  if (error) return <div className="bg-alert-soft border border-danger/30 rounded-lg p-4 text-sm text-danger">{error}</div>;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-neutral-200">
@@ -171,8 +171,8 @@ export default function OutTable({ onChanged }: Props) {
         <div className="flex items-center gap-3">
           <span className="text-xs text-neutral-500">{filtered.length} of {data.length} rows</span>
           <button onClick={reset} className="px-2 py-1.5 text-xs text-neutral-500 hover:text-neutral-800" title="Reset column order">↔ Reset Columns</button>
-          <button onClick={() => window.open('/api/export?type=out', '_blank')} className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700">↓ Export Excel</button>
-          <button onClick={() => setShowUpload(true)} className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-md hover:bg-red-700">↑ Upload OUT Excel</button>
+          <button onClick={() => window.open('/api/export?type=out', '_blank')} className="px-3 py-1.5 bg-success text-white text-xs font-medium rounded-md hover:bg-success-dark">↓ Export Excel</button>
+          <button onClick={() => setShowUpload(true)} className="px-3 py-1.5 bg-danger text-white text-xs font-medium rounded-md hover:bg-danger/90">↑ Upload OUT Excel</button>
         </div>
       </div>
       {showUpload && (
@@ -193,7 +193,7 @@ export default function OutTable({ onChanged }: Props) {
           />
           <tbody>
             {pageRows.map((row) => (
-              <tr key={row.id} className="hover:bg-blue-50/30 border-b border-neutral-100">
+              <tr key={row.id} className="hover:bg-command-hover/60 border-b border-neutral-100">
                 {orderedColumns.map((c) => {
                   const v = row[c.key];
                   let display: string | number | null = (v ?? '') as string | number | null;
@@ -217,7 +217,7 @@ export default function OutTable({ onChanged }: Props) {
                     onChange={(e) => {
                       if (e.target.value === 'In') setRestoreFor(row);
                     }}
-                    className="w-full px-1 py-0.5 text-sm border border-transparent hover:border-blue-300 focus:border-blue-400 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-1 py-0.5 text-sm border border-transparent hover:border-primary-light focus:border-primary rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
                     title="Set In to move back to Fleet"
                   >
                     <option value="Out">Out</option>
@@ -225,7 +225,7 @@ export default function OutTable({ onChanged }: Props) {
                   </select>
                 </td>
                 <td className="px-2 py-1 text-center">
-                  <button onClick={() => handleDelete(row.id, row.veh_no)} className="text-red-400 hover:text-red-600 text-sm" title="Delete">✕</button>
+                  <button onClick={() => handleDelete(row.id, row.veh_no)} className="text-danger hover:text-primary-accessible-hover text-sm" title="Delete">✕</button>
                 </td>
               </tr>
             ))}

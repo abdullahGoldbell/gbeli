@@ -28,7 +28,7 @@ export default function ReleaseStatusCell({ row, value, readOnly, onUpdate, onSt
           onUpdate(row.id, 'release_status', v || null);
         }
       }}
-      className="w-full px-1 py-0.5 text-sm border border-transparent hover:border-blue-300 focus:border-blue-400 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
+      className="w-full px-1 py-0.5 text-sm border border-transparent hover:border-primary-light focus:border-primary rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
     >
       <option value="">-</option>
       {RELEASE_STATUSES.map((s) => (

@@ -89,7 +89,7 @@ function inDateColumn(isAdmin: boolean, onUpdate: FleetUpdateHandler): FleetColu
 
 const vehNoColumn: FleetColumn = columnHelper.accessor('veh_no', {
   header: 'Veh No', size: 90, minSize: 60,
-  cell: ({ getValue }) => <span className="font-mono font-semibold text-blue-700">{getValue()}</span>,
+  cell: ({ getValue }) => <span className="font-mono font-semibold text-primary-accessible">{getValue()}</span>,
 });
 
 function releaseStatusColumn(ro: boolean, onUpdate: FleetUpdateHandler, onStatusMove?: FleetStatusMoveHandler): FleetColumn {

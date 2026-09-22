@@ -144,7 +144,7 @@ export default function BatteryTable({ onChanged }: Props) {
   };
 
   if (loading) return <div className="bg-white rounded-lg p-12 text-center text-neutral-400">Loading battery prices...</div>;
-  if (error) return <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">{error}</div>;
+  if (error) return <div className="bg-alert-soft border border-danger/30 rounded-lg p-4 text-sm text-danger">{error}</div>;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-neutral-200">
@@ -178,7 +178,7 @@ export default function BatteryTable({ onChanged }: Props) {
           />
           <tbody>
             {pageRows.map((row) => (
-              <tr key={row.id} className="hover:bg-blue-50/30 border-b border-neutral-100">
+              <tr key={row.id} className="hover:bg-command-hover/60 border-b border-neutral-100">
                 {orderedColumns.map((c) => {
                   const v = row[c.key];
                   let display: string | number | null = (v ?? '') as string | number | null;
@@ -196,7 +196,7 @@ export default function BatteryTable({ onChanged }: Props) {
                   );
                 })}
                 <td className="px-2 py-1 text-center">
-                  <button onClick={() => handleDelete(row.id, row.fl)} className="text-red-400 hover:text-red-600 text-sm" title="Delete">✕</button>
+                  <button onClick={() => handleDelete(row.id, row.fl)} className="text-danger hover:text-primary-accessible-hover text-sm" title="Delete">✕</button>
                 </td>
               </tr>
             ))}

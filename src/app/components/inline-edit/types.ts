@@ -12,4 +12,4 @@ export interface InlineEditProps {
 }
 
 export const EDITOR_INPUT_CLASS =
-  'w-full px-1 py-0.5 text-sm border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500';
+  'w-full px-1 py-0.5 text-sm border border-primary rounded focus:outline-none focus:ring-1 focus:ring-primary';

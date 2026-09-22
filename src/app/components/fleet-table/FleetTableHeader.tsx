@@ -17,7 +17,7 @@ function SortToggle({ header }: { header: Header<FleetRecord, unknown> }) {
   return (
     <button
       type="button"
-      className="flex items-center gap-1 cursor-pointer hover:text-blue-300"
+      className="flex items-center gap-1 cursor-pointer hover:text-primary-light"
       onClick={header.column.getToggleSortingHandler()}
     >
       <span className="text-neutral-500">⋮⋮</span>
@@ -34,7 +34,7 @@ function ResizeHandle({ header }: { header: Header<FleetRecord, unknown> }) {
       onMouseDown={header.getResizeHandler()}
       onTouchStart={header.getResizeHandler()}
       onDragStart={(e) => e.preventDefault()}
-      className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none ${header.column.getIsResizing() ? 'bg-blue-400' : 'bg-neutral-600 opacity-0 group-hover:opacity-100'}`}
+      className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none ${header.column.getIsResizing() ? 'bg-primary' : 'bg-neutral-600 opacity-0 group-hover:opacity-100'}`}
     />
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { AuthUser } from '@/lib/types';
 
 interface Props {
@@ -13,13 +14,23 @@ export default function DashboardHeader({ user, vehicleCount, onOpenAdmin, onLog
   return (
     <header className="bg-neutral-900 text-white px-6 py-4 shadow-lg">
       <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">FMS Fleet Dashboard</h1>
-          <p className="text-neutral-400 text-sm">Fleet Management System &middot; {vehicleCount} vehicles</p>
+        <div className="flex items-center gap-3">
+          <Image
+            src="/goldbell-group-logo.svg"
+            alt="Goldbell Group"
+            width={40}
+            height={40}
+            priority
+            className="h-10 w-10 shrink-0"
+          />
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">FMS Fleet Dashboard</h1>
+            <p className="text-neutral-400 text-sm">Fleet Management System &middot; {vehicleCount} vehicles</p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-gb-gold animate-pulse" />
             <span className="text-xs text-neutral-400">Live</span>
           </div>
           {user && (

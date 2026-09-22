@@ -132,7 +132,7 @@ export default function AddVehicleModal({ onClose, onSubmit, existing = NO_EXIST
             <button type="button" onClick={onClose}
               className="px-4 py-2 text-sm border rounded-md hover:bg-neutral-50">Cancel</button>
             <button type="submit"
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">Add Vehicle</button>
+              className="px-4 py-2 text-sm bg-primary text-gb-ink rounded-md hover:bg-primary-dark font-medium">Add Vehicle</button>
           </div>
         </form>
       </div>

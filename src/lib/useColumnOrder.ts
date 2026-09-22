@@ -111,7 +111,7 @@ export function useColumnOrder(storageKey: string, defaultKeys: string[]) {
   /** Visual affordance for the dragged column and the current drop target. */
   const dragClass = useCallback((key: string) => {
     if (dragKey === key) return 'opacity-40';
-    if (overKey === key) return 'bg-blue-600/40';
+    if (overKey === key) return 'bg-primary/40';
     return '';
   }, [dragKey, overKey]);
 

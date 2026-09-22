@@ -27,7 +27,7 @@ interface Props<K extends string> {
 }
 
 const HEADER_CELL = 'px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap';
-const FILTER_INPUT = 'w-full px-2 py-1 text-xs text-neutral-800 border border-neutral-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500';
+const FILTER_INPUT = 'w-full px-2 py-1 text-xs text-neutral-800 border border-neutral-300 rounded focus:outline-none focus:ring-1 focus:ring-primary';
 
 /** Two-row table head shared by the list views: draggable sort headers + per-column filters. */
 export default function SortableTableHead<K extends string>(props: Props<K>) {
@@ -45,7 +45,7 @@ export default function SortableTableHead<K extends string>(props: Props<K>) {
             className={`${HEADER_CELL} cursor-move transition-colors ${dragClass(c.key)}`}
             title="Drag to reorder column"
           >
-            <button onClick={() => onToggleSort(c.key)} className="hover:text-blue-300 flex items-center gap-1">
+            <button onClick={() => onToggleSort(c.key)} className="hover:text-primary-light flex items-center gap-1">
               <span className="text-neutral-500">⋮⋮</span>
               {c.label}
               {sortKey === c.key && <span className="text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>}

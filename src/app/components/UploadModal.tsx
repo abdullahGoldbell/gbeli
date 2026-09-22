@@ -106,8 +106,8 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
                 onDrop={handleDrop}
                 onClick={() => inputRef.current?.click()}
                 className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
-                  dragOver ? 'border-blue-400 bg-blue-50' :
-                  file ? 'border-green-300 bg-green-50/30' :
+                  dragOver ? 'border-primary bg-primary-100' :
+                  file ? 'border-success bg-gb-ok-soft/40' :
                   'border-neutral-300 bg-neutral-50 hover:border-neutral-400'
                 }`}
               >
@@ -127,7 +127,7 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
                     <p className="text-xs text-neutral-400 mt-1">{(file.size / 1024).toFixed(0)} KB</p>
                     <button
                       onClick={(e) => { e.stopPropagation(); reset(); }}
-                      className="text-xs text-red-500 hover:text-red-600 font-medium mt-2"
+                      className="text-xs text-danger hover:text-danger/70 font-medium mt-2"
                     >
                       Remove
                     </button>
@@ -142,17 +142,17 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
               </div>
 
               {/* Info */}
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100 text-xs text-blue-700">
+              <div className="mt-4 p-3 bg-primary-100 rounded-lg border border-primary-light/40 text-xs text-primary-accessible">
                 <p className="font-medium mb-1">Supported sheet names:</p>
                 <div className="flex gap-2">
-                  <span className="bg-blue-100 px-2 py-0.5 rounded font-medium">DIESEL</span>
-                  <span className="bg-blue-100 px-2 py-0.5 rounded font-medium">ELECTRIC</span>
+                  <span className="bg-primary-light/40 px-2 py-0.5 rounded font-medium">DIESEL</span>
+                  <span className="bg-primary-light/40 px-2 py-0.5 rounded font-medium">ELECTRIC</span>
                 </div>
-                <p className="mt-2 text-blue-600">Existing vehicles (by Veh No) will be updated. New vehicles will be added.</p>
+                <p className="mt-2 text-primary-accessible">Existing vehicles (by Veh No) will be updated. New vehicles will be added.</p>
               </div>
 
               {error && (
-                <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100 text-xs text-red-600 font-medium">
+                <div className="mt-3 p-3 bg-alert-soft rounded-lg border border-danger/20 text-xs text-danger font-medium">
                   {error}
                 </div>
               )}
@@ -165,13 +165,13 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
               <p className="text-sm text-neutral-500 mt-1">{result.filename}</p>
 
               <div className="grid grid-cols-2 gap-3 mt-5">
-                <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
-                  <p className="text-xl font-bold text-amber-700">{result.diesel}</p>
-                  <p className="text-[11px] text-amber-600 font-medium">Diesel</p>
+                <div className="bg-muted-bg rounded-lg p-3 border border-warm-border">
+                  <p className="text-xl font-bold text-gb-ink">{result.diesel}</p>
+                  <p className="text-[11px] text-neutral-500 font-medium">Diesel</p>
                 </div>
-                <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                  <p className="text-xl font-bold text-blue-700">{result.electric}</p>
-                  <p className="text-[11px] text-blue-600 font-medium">Electric</p>
+                <div className="bg-primary-100 rounded-lg p-3 border border-primary-light/40">
+                  <p className="text-xl font-bold text-primary-accessible">{result.electric}</p>
+                  <p className="text-[11px] text-primary-accessible font-medium">Electric</p>
                 </div>
               </div>
 
@@ -194,7 +194,7 @@ export default function UploadModal({ onClose, onSuccess, mode = 'fleet' }: Prop
               <button
                 onClick={handleUpload}
                 disabled={!file || uploading}
-                className="px-5 py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                className="px-5 py-2 text-sm font-medium bg-primary text-gb-ink rounded-md hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
                 {uploading ? (
                   <>

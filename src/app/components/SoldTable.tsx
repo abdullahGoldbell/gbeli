@@ -127,7 +127,7 @@ export default function SoldTable({ onChanged }: Props) {
   };
 
   if (loading) return <div className="bg-white rounded-lg p-12 text-center text-neutral-400">Loading sold records...</div>;
-  if (error) return <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">{error}</div>;
+  if (error) return <div className="bg-alert-soft border border-danger/30 rounded-lg p-4 text-sm text-danger">{error}</div>;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-neutral-200">
@@ -136,8 +136,8 @@ export default function SoldTable({ onChanged }: Props) {
         <div className="flex items-center gap-3">
           <span className="text-xs text-neutral-500">{filtered.length} of {data.length} rows</span>
           <button onClick={reset} className="px-2 py-1.5 text-xs text-neutral-500 hover:text-neutral-800" title="Reset column order">↔ Reset Columns</button>
-          <button onClick={() => window.open('/api/export?type=sold', '_blank')} className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700">↓ Export Excel</button>
-          <button onClick={() => setShowUpload(true)} className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-md hover:bg-violet-700">↑ Upload Sold Excel</button>
+          <button onClick={() => window.open('/api/export?type=sold', '_blank')} className="px-3 py-1.5 bg-success text-white text-xs font-medium rounded-md hover:bg-success-dark">↓ Export Excel</button>
+          <button onClick={() => setShowUpload(true)} className="px-3 py-1.5 bg-charcoal-light text-white text-xs font-medium rounded-md hover:bg-charcoal">↑ Upload Sold Excel</button>
         </div>
       </div>
       {showUpload && (
@@ -157,7 +157,7 @@ export default function SoldTable({ onChanged }: Props) {
           />
           <tbody>
             {pageRows.map((row) => (
-              <tr key={row.id} className="hover:bg-blue-50/30 border-b border-neutral-100">
+              <tr key={row.id} className="hover:bg-command-hover/60 border-b border-neutral-100">
                 {orderedColumns.map((c) => {
                   const v = row[c.key];
                   let display: string | number | null = (v ?? '') as string | number | null;
@@ -175,7 +175,7 @@ export default function SoldTable({ onChanged }: Props) {
                   );
                 })}
                 <td className="px-2 py-1 text-center">
-                  <button onClick={() => handleDelete(row.id, row.veh_no)} className="text-red-400 hover:text-red-600 text-sm" title="Delete">✕</button>
+                  <button onClick={() => handleDelete(row.id, row.veh_no)} className="text-danger hover:text-primary-accessible-hover text-sm" title="Delete">✕</button>
                 </td>
               </tr>
             ))}

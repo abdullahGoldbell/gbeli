@@ -13,7 +13,7 @@ export default function DeleteActionCell({ row, onDelete }: Props) {
       onClick={() => {
         if (confirm(`Delete ${row.veh_no}?`)) onDelete(row.id, row.veh_no);
       }}
-      className="text-red-400 hover:text-red-600 text-sm"
+      className="text-danger hover:text-primary-accessible-hover text-sm"
       title="Delete"
     >
       ✕

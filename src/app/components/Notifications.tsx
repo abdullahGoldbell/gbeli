@@ -30,9 +30,9 @@ export default function Notifications() {
   if (toasts.length === 0) return null;
 
   const bgColors = {
-    info: 'bg-blue-600',
-    success: 'bg-emerald-600',
-    warning: 'bg-amber-600',
+    info: 'bg-charcoal-light',
+    success: 'bg-success',
+    warning: 'bg-warning',
   };
 
   return (

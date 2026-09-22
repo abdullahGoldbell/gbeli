@@ -10,11 +10,13 @@ const JWT_SECRET = new TextEncoder().encode(jwtSecretValue);
 const COOKIE_NAME = 'fms_token';
 
 const PUBLIC_PATHS = ['/login', '/api/auth/login'];
+// Files served from /public (logo, favicon, icons) never need a session.
+const STATIC_ASSET = /\.(svg|png|jpe?g|gif|webp|ico|woff2?)$/i;
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))
     || pathname.startsWith('/_next')
-    || pathname === '/favicon.ico';
+    || STATIC_ASSET.test(pathname);
 }
 
 export async function middleware(request: NextRequest) {

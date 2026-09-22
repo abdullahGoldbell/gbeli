@@ -33,7 +33,7 @@ function ReadOnlyReservationCell({ formatted, onSave }: { formatted: string; onS
     <button
       type="button"
       onClick={handleReserveToday}
-      className="block w-full text-left cursor-pointer min-h-[1.5em] px-1 py-0.5 rounded hover:bg-blue-50 text-blue-600"
+      className="block w-full text-left cursor-pointer min-h-[1.5em] px-1 py-0.5 rounded hover:bg-command-hover text-primary-accessible"
       title="Click to reserve today"
     >
       Reserve today
@@ -69,7 +69,7 @@ export default function ReservationDateCell({ value, onSave, isAdmin }: Props) {
       <button
         type="button"
         onClick={handleOpen}
-        className="block w-full text-left cursor-pointer min-h-[1.5em] px-1 py-0.5 rounded hover:bg-blue-50 truncate"
+        className="block w-full text-left cursor-pointer min-h-[1.5em] px-1 py-0.5 rounded hover:bg-command-hover truncate"
         title={formatted || 'Click to set date'}
       >
         {formatted || <span className="text-neutral-300">-</span>}
@@ -78,8 +78,8 @@ export default function ReservationDateCell({ value, onSave, isAdmin }: Props) {
   }
   return (
     <div className="flex items-center gap-1">
-      <input ref={dateInputRef} type="date" aria-label="Reservation date" value={dateVal} onChange={(e) => setDateVal(e.target.value)} className="flex-1 px-1 py-0.5 text-sm border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" />
-      <button onClick={handleConfirm} className="px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Save</button>
+      <input ref={dateInputRef} type="date" aria-label="Reservation date" value={dateVal} onChange={(e) => setDateVal(e.target.value)} className="flex-1 px-1 py-0.5 text-sm border border-primary rounded focus:outline-none focus:ring-1 focus:ring-primary" />
+      <button onClick={handleConfirm} className="px-1.5 py-0.5 bg-primary text-gb-ink text-xs rounded hover:bg-primary-dark">Save</button>
       <button onClick={handleCancel} aria-label="Cancel" className="px-1 py-0.5 text-neutral-400 hover:text-neutral-600 text-xs">✕</button>
     </div>
   );

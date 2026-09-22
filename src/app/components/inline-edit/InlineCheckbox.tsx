@@ -18,7 +18,7 @@ export default function InlineCheckbox({ value, field, fieldLabel, readOnly, onS
       checked={!!value}
       onChange={(e) => !readOnly && onSave(field, e.target.checked)}
       disabled={readOnly}
-      className={`w-4 h-4 accent-blue-600 ${readOnly ? 'opacity-60' : 'cursor-pointer'}`}
+      className={`w-4 h-4 accent-primary ${readOnly ? 'opacity-60' : 'cursor-pointer'}`}
     />
   );
 }

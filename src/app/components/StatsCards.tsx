@@ -29,12 +29,12 @@ export default function StatsCards({ stats, onCardClick }: Props) {
     icon: string;
     action: CardAction;
   }> = [
-    { label: 'Total Fleet', value: stats.total, color: 'bg-blue-600', icon: '🚜', action: { kind: 'filter', reset: true } },
-    { label: 'Electrical', value: stats.electrical, color: 'bg-emerald-600', icon: '⚡', action: { kind: 'filter', fleet_type: 'ELECTRICAL' } },
-    { label: 'Diesel', value: stats.diesel, color: 'bg-amber-600', icon: '⛽', action: { kind: 'filter', fleet_type: 'DIESEL' } },
-    { label: 'Out', value: stats.out ?? 0, color: 'bg-red-600', icon: '📤', action: { kind: 'nav', tab: 'out' } },
-    { label: 'Sold', value: stats.sold ?? 0, color: 'bg-violet-600', icon: '💰', action: { kind: 'nav', tab: 'sold' } },
-    { label: 'Battery Price', value: stats.battery ?? 0, sub: fmtMoney(stats.batterySum ?? 0), color: 'bg-cyan-600', icon: '🔋', action: { kind: 'nav', tab: 'battery' } },
+    { label: 'Total Fleet', value: stats.total, color: 'bg-primary', icon: '🚜', action: { kind: 'filter', reset: true } },
+    { label: 'Electrical', value: stats.electrical, color: 'bg-success', icon: '⚡', action: { kind: 'filter', fleet_type: 'ELECTRICAL' } },
+    { label: 'Diesel', value: stats.diesel, color: 'bg-warning', icon: '⛽', action: { kind: 'filter', fleet_type: 'DIESEL' } },
+    { label: 'Out', value: stats.out ?? 0, color: 'bg-danger', icon: '📤', action: { kind: 'nav', tab: 'out' } },
+    { label: 'Sold', value: stats.sold ?? 0, color: 'bg-charcoal-light', icon: '💰', action: { kind: 'nav', tab: 'sold' } },
+    { label: 'Battery Price', value: stats.battery ?? 0, sub: fmtMoney(stats.batterySum ?? 0), color: 'bg-charcoal-light', icon: '🔋', action: { kind: 'nav', tab: 'battery' } },
   ];
 
   return (
@@ -44,7 +44,7 @@ export default function StatsCards({ stats, onCardClick }: Props) {
           key={card.label}
           type="button"
           onClick={() => onCardClick?.(card.action)}
-          className="text-left bg-white rounded-lg p-4 shadow-sm border border-neutral-200 hover:shadow-md hover:border-neutral-300 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="text-left bg-white rounded-lg p-4 shadow-sm border border-neutral-200 hover:shadow-md hover:border-neutral-300 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">{card.label}</span>

@@ -24,7 +24,7 @@ export default function UserList({ users, currentUserId, onEdit, onDelete, onAdd
               <span className="text-xs text-[#64748b]">({u.displayName})</span>
             )}
             {u.isAdmin && (
-              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">
+              <span className="bg-primary text-gb-ink text-[10px] px-1.5 py-0.5 rounded font-semibold">
                 ADMIN
               </span>
             )}
@@ -39,7 +39,7 @@ export default function UserList({ users, currentUserId, onEdit, onDelete, onAdd
             {u.id !== currentUserId && (
               <button
                 onClick={() => onDelete(u.id)}
-                className="text-xs text-red-400 hover:text-red-300"
+                className="text-xs text-danger hover:text-danger/70"
               >
                 Delete
               </button>
@@ -49,7 +49,7 @@ export default function UserList({ users, currentUserId, onEdit, onDelete, onAdd
       ))}
       <button
         onClick={onAdd}
-        className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-md"
+        className="mt-4 w-full bg-primary hover:bg-primary-dark text-white text-sm font-semibold py-2 rounded-md"
       >
         + Add User
       </button>

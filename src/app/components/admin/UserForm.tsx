@@ -3,7 +3,7 @@
 import type { UserFormData, UserRecord } from './types';
 
 const INPUT_CLASS =
-  'w-full bg-[#0f172a] border border-[#334155] rounded-md px-3 py-2 text-sm text-[#f8fafc] focus:outline-none focus:border-blue-500';
+  'w-full bg-[#0f172a] border border-[#334155] rounded-md px-3 py-2 text-sm text-[#f8fafc] focus:outline-none focus:border-primary';
 
 interface UserFormProps {
   editingUser: UserRecord | null;
@@ -63,7 +63,7 @@ export default function UserForm({ editingUser, formData, error, onChange, onCan
           <span className="text-sm text-[#f8fafc]">Admin</span>
         </label>
       </div>
-      {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
+      {error && <p className="text-danger text-sm mt-3">{error}</p>}
       <div className="flex justify-end gap-2 mt-4">
         <button
           onClick={onCancel}
@@ -73,7 +73,7 @@ export default function UserForm({ editingUser, formData, error, onChange, onCan
         </button>
         <button
           onClick={onSave}
-          className="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-md font-semibold"
+          className="px-4 py-2 text-sm text-white bg-primary hover:bg-primary-dark rounded-md font-semibold"
         >
           {editingUser ? 'Update' : 'Create'}
         </button>

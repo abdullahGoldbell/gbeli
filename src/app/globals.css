@@ -1,36 +1,87 @@
 @import "tailwindcss";
 
+/* Goldbell brand tokens. Tailwind v4 turns every --color-* here into utilities
+   (bg-primary, text-gb-ink, border-warm-border, ...). */
 @theme inline {
-  --color-primary: #1e40af;
-  --color-primary-light: #3b82f6;
-  --color-success: #16a34a;
-  --color-warning: #d97706;
-  --color-danger: #dc2626;
-  --color-neutral-50: #f8fafc;
-  --color-neutral-100: #f1f5f9;
-  --color-neutral-200: #e2e8f0;
-  --color-neutral-300: #cbd5e1;
-  --color-neutral-400: #94a3b8;
-  --color-neutral-500: #64748b;
-  --color-neutral-600: #475569;
+  /* Brand gold */
+  --color-primary: #F5A623;
+  --color-gb-gold: #F5A623;
+  --color-primary-light: #F6B243;
+  --color-primary-lighter: #F7BC5B;
+  --color-primary-dark: #D48E1A;
+  --color-primary-hover: #D48E1A;
+  --color-gb-gold-deep: #D48E1A;
+  --color-primary-50: #FAF7F4;
+  --color-gb-gold-soft: #FAF7F4;
+  --color-primary-100: #FDEBC2;
+  --color-primary-accessible: #684300;
+  --color-primary-accessible-hover: #553600;
+
+  /* Charcoal / ink */
+  --color-charcoal: #1C1C1E;
+  --color-gb-ink: #1C1C1E;
+  --color-sidebar: #1C1C1E;
+  --color-charcoal-light: #2A2A2C;
+  --color-gb-dark-2: #2A2A2C;
+  --color-gb-dark-3: #34343A;
+  --color-charcoal-dark: #0F0F10;
+
+  /* Surfaces */
+  --color-cream: #F5F0EB;
+  --color-surface: #F5F0EB;
+  --color-gb-surface: #F5F0EB;
+  --color-surface-raised: #FFFFFF;
+  --color-gb-canvas: #FFFFFF;
+  --color-muted-bg: #FCFAF7;
+  --color-warm-border: #E8E0D8;
+  --color-gb-divider: #E8E0D8;
+  --color-command-bg: #FDFBF8;
+  --color-command-fg: #4B4540;
+  --color-command-hover: #FDF3E1;
+  --color-command-active: #F9E8C8;
+
+  /* Neutrals (warm scale; dark end is charcoal so bg-neutral-800/900 become brand ink) */
+  --color-neutral-50: #FCFAF7;
+  --color-neutral-100: #F5F0EB;
+  --color-neutral-200: #E8E0D8;
+  --color-neutral-300: #CBD5E1;
+  --color-neutral-400: #94A3B8;
+  --color-neutral-500: #404E63;
+  --color-gb-ink-soft: #404E63;
+  --color-neutral-600: #39465A;
   --color-neutral-700: #334155;
-  --color-neutral-800: #1e293b;
-  --color-neutral-900: #0f172a;
+  --color-neutral-800: #2A2A2C;
+  --color-neutral-900: #0F0F10;
+
+  /* Status */
+  --color-success: #15803D;
+  --color-gb-ok: #15803D;
+  --color-success-dark: #116632;
+  --color-gb-ok-soft: #D1FAE5;
+  --color-warning: #92400E;
+  --color-danger: #DC2626;
+  --color-gb-alert: #DC2626;
+  --color-alert-soft: #FEE2E2;
+  --color-gb-alert-soft: #FEE2E2;
+
+  /* Misc */
+  --color-rank-silver: #C7C9CC;
+  --color-rank-bronze: #C08552;
 }
 
 body {
-  background: var(--color-neutral-50);
-  color: var(--color-neutral-900);
+  background: var(--color-cream);
+  color: var(--color-gb-ink);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-@keyframes flash-green {
-  0% { background-color: #bbf7d0; }
+@keyframes flash-updated {
+  0% { background-color: var(--color-gb-ok-soft); }
   100% { background-color: transparent; }
 }
 
 .row-updated {
-  animation: flash-green 1.5s ease-out;
+  animation: flash-updated 1.5s ease-out;
 }
 
 /* Toast animations */

@@ -7,7 +7,7 @@ const TABS: { key: AdminTab; label: string }[] = [
   { key: 'columns', label: 'Column Access' },
 ];
 
-const ACTIVE_CLASS = 'text-blue-400 border-b-2 border-blue-400';
+const ACTIVE_CLASS = 'text-primary border-b-2 border-primary';
 const INACTIVE_CLASS = 'text-[#64748b] hover:text-[#94a3b8]';
 
 interface AdminTabsProps {

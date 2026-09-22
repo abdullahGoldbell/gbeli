@@ -28,7 +28,7 @@ export default function ColumnAccessEditor({
       <div className="flex gap-3 mb-3">
         <button
           onClick={onShowAll}
-          className="text-xs text-blue-400 hover:text-blue-300"
+          className="text-xs text-primary hover:text-primary-light"
         >
           Select All
         </button>
@@ -44,7 +44,7 @@ export default function ColumnAccessEditor({
       <ColumnGroupList hiddenCols={hiddenCols} onToggle={onToggle} />
 
       {message && (
-        <p className={`text-sm mt-2 ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+        <p className={`text-sm mt-2 ${message.type === 'success' ? 'text-success' : 'text-danger'}`}>
           {message.text}
         </p>
       )}
@@ -52,7 +52,7 @@ export default function ColumnAccessEditor({
       <button
         onClick={onSave}
         disabled={saving}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white text-sm font-semibold py-2 rounded-md mt-2"
+        className="w-full bg-primary hover:bg-primary-dark disabled:bg-primary/50 text-gb-ink text-sm font-semibold py-2 rounded-md mt-2"
       >
         {saving ? 'Saving...' : 'Save Column Access'}
       </button>
