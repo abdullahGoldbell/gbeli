@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-table';
 import { FleetRecord } from '@/lib/types';
 import InlineEdit from './InlineEdit';
+import { useColumnOrder } from '@/lib/useColumnOrder';
 
 interface Props {
   data: FleetRecord[];
@@ -291,10 +292,20 @@ export default function FleetTable({ data, onUpdate, onDelete, onStatusMove, upd
     });
   }, [columns, hiddenColumns]);
 
+  const columnIds = useMemo(
+    () => visibleColumns.map((col) => ('accessorKey' in col ? String(col.accessorKey) : String(col.id))),
+    [visibleColumns],
+  );
+
+  const { order: columnOrder, dragProps, dragClass, reset: resetColumnOrder } = useColumnOrder(
+    'fms.columnOrder.fleet',
+    columnIds,
+  );
+
   const table = useReactTable({
     data,
     columns: visibleColumns,
-    state: { sorting },
+    state: { sorting, columnOrder },
     onSortingChange: setSorting,
     columnResizeMode,
     getCoreRowModel: getCoreRowModel(),
@@ -304,6 +315,15 @@ export default function FleetTable({ data, onUpdate, onDelete, onStatusMove, upd
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
+      <div className="px-4 py-2 flex justify-end border-b border-neutral-200">
+        <button
+          onClick={resetColumnOrder}
+          className="text-xs text-neutral-500 hover:text-neutral-800"
+          title="Reset column order"
+        >
+          ↔ Reset Columns
+        </button>
+      </div>
       <div className="overflow-x-auto">
         <table className="text-sm w-full" style={{ minWidth: table.getCenterTotalSize() }}>
           <thead>
@@ -312,10 +332,13 @@ export default function FleetTable({ data, onUpdate, onDelete, onStatusMove, upd
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="relative px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide select-none whitespace-nowrap group"
+                    {...dragProps(header.column.id)}
+                    className={`relative px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide select-none whitespace-nowrap group cursor-move transition-colors ${dragClass(header.column.id)}`}
                     style={{ width: header.getSize() }}
+                    title="Drag to reorder column"
                   >
                     <div className="flex items-center gap-1 cursor-pointer hover:text-blue-300" onClick={header.column.getToggleSortingHandler()}>
+                      <span className="text-neutral-500">⋮⋮</span>
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {{ asc: ' ↑', desc: ' ↓' }[header.column.getIsSorted() as string] ?? ''}
                     </div>
@@ -323,6 +346,7 @@ export default function FleetTable({ data, onUpdate, onDelete, onStatusMove, upd
                       <div
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
+                        onDragStart={(e) => e.preventDefault()}
                         className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none ${header.column.getIsResizing() ? 'bg-blue-400' : 'bg-neutral-600 opacity-0 group-hover:opacity-100'}`}
                       />
                     )}

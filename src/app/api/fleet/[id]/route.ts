@@ -130,8 +130,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           .input('remarks', sql.NVarChar(sql.MAX), updated.remarks)
           .input('lta_reg', sql.VarChar, updated.lta_reg)
           .input('category', sql.VarChar, updated.category)
-          .query(`INSERT INTO out_vehicles (out_date, brand, model, name, veh_no, container_mast, chassis, mast, attachment, yor, yom, customer_name, condition, supplier, remarks, lta_reg, category)
-                  VALUES (@out_date, @brand, @model, @name, @veh_no, @container_mast, @chassis, @mast, @attachment, @yor, @yom, @customer_name, @condition, @supplier, @remarks, @lta_reg, @category)`);
+          .input('type', sql.VarChar(20), updated.fleet_type)
+          .query(`INSERT INTO out_vehicles (out_date, brand, model, name, veh_no, container_mast, chassis, mast, attachment, yor, yom, customer_name, condition, supplier, remarks, lta_reg, category, type)
+                  VALUES (@out_date, @brand, @model, @name, @veh_no, @container_mast, @chassis, @mast, @attachment, @yor, @yom, @customer_name, @condition, @supplier, @remarks, @lta_reg, @category, @type)`);
         await pool.request().input('id', sql.Int, parseInt(id))
           .query('DELETE FROM fleet WHERE id = @id');
         return NextResponse.json({ moved: true, to: 'out', id: parseInt(id), veh_no: updated.veh_no });

@@ -69,6 +69,7 @@ export interface OutRecord {
   remarks: string | null;
   lta_reg: string | null;
   category: string | null;
+  type: string | null;
 }
 
 export interface SoldRecord {

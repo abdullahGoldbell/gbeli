@@ -28,9 +28,7 @@ export default function AddVehicleModal({ onClose, onSubmit, existing = [] }: Pr
     condition: 'OK',
     release_status: 'Hold',
     customer_name: '',
-    salesman_name: '',
     remarks: '',
-    location: '',
   });
 
   const suggestions = useMemo(() => {
@@ -60,7 +58,7 @@ export default function AddVehicleModal({ onClose, onSubmit, existing = [] }: Pr
     ['brand', 'Brand'], ['model', 'Model'], ['category', 'Category'],
     ['chassis', 'Chassis'], ['mast', 'Mast'], ['attachment', 'Attachment'],
     ['yor', 'Year of Reg'], ['yom', 'Year of Mfg'],
-    ['customer_name', 'Customer'], ['salesman_name', 'Salesman'], ['location', 'Location'],
+    ['customer_name', 'Customer'],
   ];
 
   return (

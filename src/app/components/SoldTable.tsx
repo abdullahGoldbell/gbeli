@@ -4,6 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SoldRecord } from '@/lib/types';
 import InlineEdit from './InlineEdit';
 import UploadModal from './UploadModal';
+import { useColumnOrder, useOrderedColumns } from '@/lib/useColumnOrder';
+
+interface Props {
+  onChanged?: () => void;
+}
 
 type SortDir = 'asc' | 'desc';
 
@@ -24,7 +29,7 @@ const COLUMNS: { key: keyof SoldRecord; label: string; type?: 'text' | 'number' 
   { key: 'do_no', label: 'DO No.' },
 ];
 
-export default function SoldTable() {
+export default function SoldTable({ onChanged }: Props) {
   const [data, setData] = useState<SoldRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +37,12 @@ export default function SoldTable() {
   const [sortKey, setSortKey] = useState<keyof SoldRecord>('sold_date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [showUpload, setShowUpload] = useState(false);
+
+  const { order, dragProps, dragClass, reset } = useColumnOrder(
+    'fms.columnOrder.sold',
+    COLUMNS.map((c) => c.key as string),
+  );
+  const orderedColumns = useOrderedColumns(COLUMNS, order, (c) => c.key as string);
 
   const fetchData = useCallback(() => {
     setLoading(true);
@@ -69,11 +80,12 @@ export default function SoldTable() {
       const res = await fetch(`/api/sold/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
       setData((prev) => prev.filter((r) => r.id !== id));
+      onChanged?.();
     } catch (e) {
       console.error(e);
       alert('Failed to delete');
     }
-  }, []);
+  }, [onChanged]);
 
   const filtered = useMemo(() => {
     const out = data.filter((row) => {
@@ -109,19 +121,27 @@ export default function SoldTable() {
         <h2 className="font-semibold text-neutral-800">Sold Vehicles</h2>
         <div className="flex items-center gap-3">
           <span className="text-xs text-neutral-500">{filtered.length} of {data.length} rows</span>
+          <button onClick={reset} className="px-2 py-1.5 text-xs text-neutral-500 hover:text-neutral-800" title="Reset column order">↔ Reset Columns</button>
+          <button onClick={() => window.open('/api/export?type=sold', '_blank')} className="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700">↓ Export Excel</button>
           <button onClick={() => setShowUpload(true)} className="px-3 py-1.5 bg-violet-600 text-white text-xs font-medium rounded-md hover:bg-violet-700">↑ Upload Sold Excel</button>
         </div>
       </div>
       {showUpload && (
-        <UploadModal mode="sold" onClose={() => setShowUpload(false)} onSuccess={() => { setShowUpload(false); fetchData(); }} />
+        <UploadModal mode="sold" onClose={() => setShowUpload(false)} onSuccess={() => { setShowUpload(false); fetchData(); onChanged?.(); }} />
       )}
       <div className="overflow-x-auto">
         <table className="text-sm w-full">
           <thead className="bg-neutral-800 text-white sticky top-0">
             <tr>
-              {COLUMNS.map((c) => (
-                <th key={c.key as string} className="px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap">
+              {orderedColumns.map((c) => (
+                <th
+                  key={c.key as string}
+                  {...dragProps(c.key as string)}
+                  className={`px-2 py-2 text-left text-xs font-semibold uppercase tracking-wide whitespace-nowrap cursor-move transition-colors ${dragClass(c.key as string)}`}
+                  title="Drag to reorder column"
+                >
                   <button onClick={() => toggleSort(c.key)} className="hover:text-blue-300 flex items-center gap-1">
+                    <span className="text-neutral-500">⋮⋮</span>
                     {c.label}
                     {sortKey === c.key && <span className="text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>}
                   </button>
@@ -130,7 +150,7 @@ export default function SoldTable() {
               <th className="px-2 py-2 w-10" />
             </tr>
             <tr className="bg-neutral-100">
-              {COLUMNS.map((c) => (
+              {orderedColumns.map((c) => (
                 <th key={`f-${c.key as string}`} className="px-2 py-1">
                   <input
                     value={filters[c.key] || ''}
@@ -146,7 +166,7 @@ export default function SoldTable() {
           <tbody>
             {filtered.map((row) => (
               <tr key={row.id} className="hover:bg-blue-50/30 border-b border-neutral-100">
-                {COLUMNS.map((c) => {
+                {orderedColumns.map((c) => {
                   const v = row[c.key];
                   let display: string | number | null = (v ?? '') as string | number | null;
                   if (c.key === 'sold_date' && v) display = String(v).slice(0, 10);
@@ -168,7 +188,7 @@ export default function SoldTable() {
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={COLUMNS.length + 1} className="px-4 py-8 text-center text-neutral-400">No matching records</td></tr>
+              <tr><td colSpan={orderedColumns.length + 1} className="px-4 py-8 text-center text-neutral-400">No matching records</td></tr>
             )}
           </tbody>
         </table>

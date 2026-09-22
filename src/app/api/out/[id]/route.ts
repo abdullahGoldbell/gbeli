@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool, sql } from '@/lib/db';
 
-const ALLOWED = ['out_date', 'brand', 'model', 'name', 'veh_no', 'container_mast', 'chassis', 'mast', 'attachment', 'yor', 'yom', 'customer_name', 'condition', 'supplier', 'remarks', 'lta_reg', 'category'];
+const ALLOWED = ['out_date', 'brand', 'model', 'name', 'veh_no', 'container_mast', 'chassis', 'mast', 'attachment', 'yor', 'yom', 'customer_name', 'condition', 'supplier', 'remarks', 'lta_reg', 'category', 'type'];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TYPES: Record<string, any> = {
@@ -22,6 +22,7 @@ const TYPES: Record<string, any> = {
   remarks: sql.NVarChar(sql.MAX),
   lta_reg: sql.VarChar(50),
   category: sql.VarChar(50),
+  type: sql.VarChar(20),
 };
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

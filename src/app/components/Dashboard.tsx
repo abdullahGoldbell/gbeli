@@ -207,14 +207,18 @@ export default function Dashboard() {
         fields: [
           { key: 'out_date', label: 'Out Date', type: 'date', required: true },
           { key: 'customer_name', label: 'Customer', type: 'text', defaultValue: row.customer_name || '' },
+          { key: 'name', label: 'Name', type: 'text', defaultValue: row.name || '' },
           { key: 'location', label: 'Location', type: 'text' },
+          { key: 'remarks', label: 'Remark', type: 'text', defaultValue: row.remarks || '' },
         ],
         submit: async (values) => {
           await submitMove(row.id, {
             release_status: 'Out',
             out_date: values.out_date || null,
             customer_name: values.customer_name || null,
+            name: values.name || null,
             location: values.location || null,
+            remarks: values.remarks || null,
           });
           setMoveModal(null);
         },
@@ -347,7 +351,7 @@ export default function Dashboard() {
 
       {/* Content */}
       <main className="max-w-[1800px] mx-auto px-6 py-6">
-        {view === 'fleet' && user?.isAdmin && <StatsCards stats={stats} onCardClick={handleStatsCardClick} />}
+        {user?.isAdmin && <StatsCards stats={stats} onCardClick={handleStatsCardClick} />}
         {user?.isAdmin && (
           <div className="flex gap-2 mb-4">
             <button
@@ -368,9 +372,9 @@ export default function Dashboard() {
             >Battery Price</button>
           </div>
         )}
-        {view === 'out' && user?.isAdmin && <OutTable />}
-        {view === 'sold' && user?.isAdmin && <SoldTable />}
-        {view === 'battery' && user?.isAdmin && <BatteryTable />}
+        {view === 'out' && user?.isAdmin && <OutTable onChanged={fetchStats} />}
+        {view === 'sold' && user?.isAdmin && <SoldTable onChanged={fetchStats} />}
+        {view === 'battery' && user?.isAdmin && <BatteryTable onChanged={fetchStats} />}
         {view === 'fleet' && (<>
           <Filters
             filters={filters}

@@ -135,6 +135,10 @@ async function doBootstrap(): Promise<void> {
     `);
 
     // Widen narrow VARCHARs that overflow real-world data
+    await pool.request().query(`
+      IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('out_vehicles') AND name = 'type')
+        ALTER TABLE out_vehicles ADD type VARCHAR(20) NULL
+    `).catch(() => {});
     await pool.request().query(`ALTER TABLE fleet ALTER COLUMN mast VARCHAR(100) NULL`).catch(() => {});
     await pool.request().query(`ALTER TABLE fleet ALTER COLUMN attachment VARCHAR(100) NULL`).catch(() => {});
     await pool.request().query(`ALTER TABLE fleet ALTER COLUMN container_mast VARCHAR(100) NULL`).catch(() => {});

@@ -7,8 +7,39 @@ export async function GET(req: NextRequest) {
     const pool = await getPool();
     const { searchParams } = new URL(req.url);
     const fleetType = searchParams.get('fleet_type');
+    const type = (searchParams.get('type') || 'fleet').toLowerCase();
 
     const isAdmin = req.headers.get('x-user-is-admin') === 'true';
+
+    // Auxiliary ledgers (Out / Sold / Battery) are admin-only exports.
+    if (type !== 'fleet') {
+      if (!isAdmin) {
+        return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+      }
+
+      const ledgers: Record<string, { table: string; order: string; sheet: string; file: string }> = {
+        out: { table: 'out_vehicles', order: 'out_date DESC, id DESC', sheet: 'OUT', file: 'FMS_Out' },
+        sold: { table: 'sold_vehicles', order: 'sold_date DESC, id DESC', sheet: 'SOLD', file: 'FMS_Sold' },
+        battery: { table: 'battery_prices', order: 'regen_date DESC, id DESC', sheet: 'BATTERY', file: 'FMS_Battery' },
+      };
+
+      const cfg = ledgers[type];
+      if (!cfg) {
+        return NextResponse.json({ error: 'Unknown export type' }, { status: 400 });
+      }
+
+      const rows = await pool.request().query(`SELECT * FROM ${cfg.table} ORDER BY ${cfg.order}`);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.recordset), cfg.sheet);
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+      return new NextResponse(buffer, {
+        headers: {
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Disposition': `attachment; filename="${cfg.file}_${new Date().toISOString().slice(0, 10)}.xlsx"`,
+        },
+      });
+    }
 
     let query = 'SELECT * FROM fleet WHERE 1=1';
     const request = pool.request();
